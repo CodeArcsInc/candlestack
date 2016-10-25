@@ -88,8 +88,13 @@ public class CloudWatchAccessor {
 
 		// Write the data points
 		for ( Datapoint datapoint : datapoints ) {
-			lastDatapointDate = datapoint.getTimestamp();
-			metricsReaderWriter.writeMetric( type, dimensionValue, datapoint.getTimestamp(), metric.getName(), metric.getStatistic().getValueFromDatapoint( datapoint ) );
+
+			// Only care about data points that have happened after the last one
+			if ( lastDatapointDate == null || datapoint.getTimestamp().after( lastDatapointDate ) ) {
+				lastDatapointDate = datapoint.getTimestamp();
+				metricsReaderWriter.writeMetric( type, dimensionValue, datapoint.getTimestamp(), metric.getName(), metric.getStatistic().getValueFromDatapoint( datapoint ) );
+			}
+
 		}
 
 		// Update the date map
@@ -109,7 +114,15 @@ public class CloudWatchAccessor {
 		Date endDate = new Date();
 		Date startDate = lastDatapointDate;
 		if ( startDate == null || ( endDate.getTime() - startDate.getTime() ) > maxTimeDifference ) {
+
 			startDate = new Date( endDate.getTime() - maxTimeDifference );
+
+		} else if ( startDate.after( endDate ) ) {
+
+			// We have a clock problem so back up the start date a few periods
+			// TODO a better long term approach is probably to skip looking up metrics this time around
+			startDate = new Date( endDate.getTime() - ( 1000 * requestPeriod * 5 ) );
+
 		}
 
 		return new GetMetricStatisticsRequest()
