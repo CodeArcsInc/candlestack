@@ -1,0 +1,13 @@
+filebeat:
+  prospectors:
+    - 
+      paths:
+        - /var/log/candlestack/metrics/*.log
+output:
+  logstash:
+    hosts: ["loststash_host"]
+shipper:
+logging:
+  files:
+    rotateeverybytes: 10485760 # = 10MB
+
