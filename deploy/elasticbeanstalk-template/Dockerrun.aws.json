@@ -1,0 +1,12 @@
+{
+ "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "$TODO_DOCKER_IMAGE_LOCATION",
+    "Update": "true"
+  },
+ "Ports": [
+   {
+     "ContainerPort": "9090"
+   }
+ ]
+}

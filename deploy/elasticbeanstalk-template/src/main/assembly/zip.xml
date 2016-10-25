@@ -1,0 +1,31 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+	<id>bin</id>
+	<baseDirectory>/</baseDirectory>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<fileSets>
+		<fileSet>
+			<directory>${basedir}</directory>
+			<includes>
+				<include>Docker*</include>
+				<include>*.conf</include>
+				<include>*.sh</include>
+				<include>*.yml</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>${basedir}/.ebextensions</directory>
+			<outputDirectory>/.ebextensions</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/candlestack</directory>
+			<outputDirectory>/candlestack</outputDirectory>
+		</fileSet>
+	</fileSets>
+</assembly>

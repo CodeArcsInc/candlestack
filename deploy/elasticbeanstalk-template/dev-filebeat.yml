@@ -1,11 +1,11 @@
 filebeat:
   prospectors:
-    - 
+    -
       paths:
-        - /var/log/candlestack/metrics/*.log
+        - /logs/*/*/*.log
 output:
   logstash:
-    hosts: ["loststash_host"]
+    hosts: ["$TODO_LOGSTASH_HOST:5555"]
 shipper:
 logging:
   files:
