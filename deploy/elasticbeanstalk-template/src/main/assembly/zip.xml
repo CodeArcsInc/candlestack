@@ -27,5 +27,9 @@
 			<directory>${basedir}/candlestack</directory>
 			<outputDirectory>/candlestack</outputDirectory>
 		</fileSet>
+		<fileSet>
+			<directory>${basedir}/scripts</directory>
+			<outputDirectory>/scripts</outputDirectory>
+		</fileSet>
 	</fileSets>
 </assembly>

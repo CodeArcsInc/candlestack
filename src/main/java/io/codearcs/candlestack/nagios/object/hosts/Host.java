@@ -29,6 +29,8 @@ public class Host implements NagiosObject {
 
 	private List<Service> services;
 
+	private boolean notificationsEnabled;
+
 
 	public Host( String name, String alias, String address, Set<String> contactGroups ) {
 		this.name = name;
@@ -40,6 +42,7 @@ public class Host implements NagiosObject {
 		maxCheckAttempts = 5;
 		notificationInterval = 10;
 		checkInterval = 5;
+		notificationsEnabled = true;
 
 		checkPeriod = TimePeriod.getTwentyFourSevenName();
 		notificationPeriod = TimePeriod.getTwentyFourSevenName();
@@ -104,6 +107,11 @@ public class Host implements NagiosObject {
 	}
 
 
+	public boolean isNotificationsEnabled() {
+		return notificationsEnabled;
+	}
+
+
 	@Override
 	public String getObjectDefinitions() {
 		StringBuilder sb = new StringBuilder( "define host{\n" );
@@ -138,6 +146,10 @@ public class Host implements NagiosObject {
 
 		sb.append( "\tnotification_period\t" );
 		sb.append( notificationPeriod );
+		sb.append( "\n" );
+
+		sb.append( "\tnotifications_enabled\t" );
+		sb.append( notificationsEnabled ? "1" : "0" );
 		sb.append( "\n" );
 
 		sb.append( "\tcontact_groups\t" );

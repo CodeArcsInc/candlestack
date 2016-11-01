@@ -14,6 +14,8 @@ ADD candlestack /opt/candlestack
 
 ADD start-candlestack.sh /opt/
 
+ADD scripts /opt/scripts
+
 ADD start-filebeat.sh /opt/
 
 ADD *-filebeat.yml /opt/filebeat/
@@ -21,7 +23,5 @@ ADD *-filebeat.yml /opt/filebeat/
 ADD supervisord.conf /etc/supervisor/supervisord.conf
 
 EXPOSE 9090
-
-RUN /etc/init.d/apache2 restart
 
 CMD supervisord -c /etc/supervisor/supervisord.conf

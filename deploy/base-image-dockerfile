@@ -78,5 +78,11 @@ ENV PATH ${PATH}:${JAVA_HOME}/bin
 # Install Filebeat
 RUN curl  -s 'https://download.elastic.co/beats/filebeat/filebeat-1.3.1-x86_64.tar.gz' | tar xvzf - -C /opt && ln -s $(find /opt -mindepth 1 -maxdepth 1 -type d | grep -i filebeat) /opt/filebeat
 
+# Install AWS CLI
+RUN cd /tmp &&\
+ 	curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" &&\
+ 	unzip awscli-bundle.zip &&\
+ 	sudo ./awscli-bundle/install -i /opt/aws -b /usr/local/bin/aws
+ 	
 # Clean Up
 RUN apt-get clean && rm -rf /tmp/*

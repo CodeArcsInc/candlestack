@@ -1,0 +1,39 @@
+#! /bin/bash 
+
+NOTIFICATIONTYPE="$1"
+SERVICEDESC="$2"
+HOSTALIAS="$3"
+HOSTADDRESS="$4"
+SERVICESTATE="$5"
+LONGDATETIME="$6"
+SERVICEOUTPUT="$7"
+CONTACTEMAILS="$8"
+
+SERVICEOUTPUT=$(echo "$SERVICEOUTPUT" | sed -e 's/br\//\n/g')
+
+msg=$(cat << EOF
+**** Nagios ****
+
+Type: $NOTIFICATIONTYPE
+
+Service: $SERVICEDESC
+Host: $HOSTALIAS
+Address: $HOSTADDRESS
+State: $SERVICESTATE
+
+Date/Time: $LONGDATETIME
+
+Additional Info:
+
+$SERVICEOUTPUT 
+EOF
+)
+
+FROM="$TODO_FROM_EMAIL_ADDRESS"
+SUBJECT="** $NOTIFICATIONTYPE Service Alert: $HOSTALIAS/$SERVICEDESC is $SERVICESTATE **"
+
+aws --region $TODO_AWS_REGION ses send-email \
+	--from "$FROM" \
+	--to "$CONTACTEMAILS" \
+	--subject "$SUBJECT" \
+	--text "$msg"

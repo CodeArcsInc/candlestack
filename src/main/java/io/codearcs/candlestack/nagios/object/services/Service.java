@@ -25,6 +25,8 @@ public class Service implements NagiosObject {
 
 	private String checkPeriod, notificationPeriod;
 
+	private boolean notificationsEnabled;
+
 
 	public Service( String description, String hostName, String checkCommand, Set<String> contactGroups ) {
 
@@ -36,7 +38,8 @@ public class Service implements NagiosObject {
 		maxCheckAttempts = 3;
 		checkInterval = 5;
 		retryInterval = 1;
-		notificationInterval = 5;
+		notificationInterval = 0;
+		notificationsEnabled = true;
 
 		checkPeriod = TimePeriod.getTwentyFourSevenName();
 		notificationPeriod = TimePeriod.getTwentyFourSevenName();
@@ -94,6 +97,11 @@ public class Service implements NagiosObject {
 	}
 
 
+	public boolean isNotificationsEnabled() {
+		return notificationsEnabled;
+	}
+
+
 	@Override
 	public String getObjectDefinitions() {
 		StringBuilder sb = new StringBuilder( "define service{\n" );
@@ -124,6 +132,10 @@ public class Service implements NagiosObject {
 
 		sb.append( "\tnotification_interval\t" );
 		sb.append( notificationInterval );
+		sb.append( "\n" );
+
+		sb.append( "\tnotifications_enabled\t" );
+		sb.append( notificationsEnabled ? "1" : "0" );
 		sb.append( "\n" );
 
 		sb.append( "\tcheck_period\t" );
