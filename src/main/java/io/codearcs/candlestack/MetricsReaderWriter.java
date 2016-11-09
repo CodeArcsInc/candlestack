@@ -32,7 +32,7 @@ public class MetricsReaderWriter {
 	private static final Logger LOGGER = LoggerFactory.getLogger( MetricsReaderWriter.class );
 
 	private static final String DIR_PROPERTY_KEY = "metrics.writer.dir",
-			COMPONENT = "candlestack",
+			COMPONENT = "candlestack_metric",
 			FILE_PREFIX = "candlestack_metrics_",
 			FILE_SUFFIX = ".log",
 			TIMESTAMP_KEY = "@timestamp",
