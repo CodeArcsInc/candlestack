@@ -31,5 +31,13 @@
 			<directory>${basedir}/scripts</directory>
 			<outputDirectory>/scripts</outputDirectory>
 		</fileSet>
+		<fileSet>
+			<directory>${basedir}/apache2</directory>
+			<outputDirectory>/apache2</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/nagios</directory>
+			<outputDirectory>/nagios</outputDirectory>
+		</fileSet>
 	</fileSets>
 </assembly>

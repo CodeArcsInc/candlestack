@@ -25,11 +25,7 @@ RUN curl -s 'https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.2.
 	chown -R nagios:nagios /opt/nagios/libexec/eventhandlers &&\
 	a2ensite nagios &&\
 	a2enmod rewrite cgi &&\
-	sed -i '29s/.*/#cfg_file=\/opt\/nagios\/etc\/objects\/commands.cfg/' /opt/nagios/etc/nagios.cfg &&\
-	sed -i '30s/.*/#cfg_file=\/opt\/nagios\/etc\/objects\/contacts.cfg/' /opt/nagios/etc/nagios.cfg &&\
-	sed -i '31s/.*/#cfg_file=\/opt\/nagios\/etc\/objects\/timeperiods.cfg/' /opt/nagios/etc/nagios.cfg &&\
-	sed -i '32s/.*/#cfg_file=\/opt\/nagios\/etc\/objects\/templates.cfg/' /opt/nagios/etc/nagios.cfg &&\
-	sed -i '35s/.*/#cfg_file=\/opt\/nagios\/etc\/objects\/localhost.cfg/' /opt/nagios/etc/nagios.cfg
+	a2enmod headers
 
 # Download, extract, and install Nagios Plugins
 RUN curl -s 'https://nagios-plugins.org/download/nagios-plugins-2.1.2.tar.gz' \

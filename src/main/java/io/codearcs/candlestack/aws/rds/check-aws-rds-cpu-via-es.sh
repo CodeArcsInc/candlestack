@@ -100,14 +100,20 @@ function run_query {
 	local query="$1"
 	local today="$2"
 	local yesterday="$3"
-	
-	curl -sm 10  "https://$host/candlestack-$today,candlestack-$yesterday/_search?timeout=3m" \
-	-H "Authorization: Basic $authtoken" \
-	-H 'Content-Type: application/json;charset=UTF-8' \
-	-H 'Accept: application/json, text/plain, */*' \
-	--data-binary @- <<< "$query" |
-		# Get the result in CSV
-		jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
+	local endpoint="https://$host/candlestack-$today,candlestack-$yesterday/_search?timeout=3m"
+
+	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/candlestack-$today" -H "Authorization: Basic $authtoken")
+	if [ "$statuscode" == "404" ];then
+		endpoint="https://$host/candlestack-$yesterday/_search?timeout=3m"
+	fi
+
+	curl -sm 10 "$endpoint" \
+		-H "Authorization: Basic $authtoken" \
+		-H 'Content-Type: application/json;charset=UTF-8' \
+		-H 'Accept: application/json, text/plain, */*' \
+		--data-binary @- <<< "$query" |
+			# Get the result in CSV
+			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
 }
 
 # This function returns epoch in ms from data_string

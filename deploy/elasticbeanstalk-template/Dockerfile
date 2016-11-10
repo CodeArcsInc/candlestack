@@ -2,9 +2,12 @@
 FROM $TODO_DOCKER_IMAGE_LOCATION
 MAINTAINER CodeArcs [...]
 
-# Update the Nagios configuration to look at the directory Candlestack will be updating and have apache listen on the port being exposed by the container
-RUN sed -i '55s/.*/cfg_dir=\/var\/tmp\/nagios\/objects/' /opt/nagios/etc/nagios.cfg &&\
-	sed -i '5s/.*/Listen 9090/' /etc/apache2/ports.conf
+# Update the Nagios configuration
+ADD nagios/nagios.cfg /opt/nagios/etc/nagios.cfg
+
+# Update Apache2 configuration files
+ADD apache2/apache2.conf /etc/apache2/apache2.conf
+ADD apache2/ports.conf /etc/apache2/ports.conf
 
 # Create the username/password for Nagios website and start Apache2
 RUN htpasswd -bc /opt/nagios/etc/htpasswd.users $TODO_NAGIOS_ADMIN $TODO_NAGIOS_PASSWORD &&\ 
