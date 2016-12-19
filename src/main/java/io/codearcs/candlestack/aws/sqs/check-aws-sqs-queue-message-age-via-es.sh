@@ -181,7 +181,7 @@ function check_exp {
 }
 
 
-query=$(get_query $(get_epoch_in_ms 'now - 10 minute') $(get_epoch_in_ms 'now'))
+query=$(get_query $(get_epoch_in_ms 'now - 20 minute') $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
