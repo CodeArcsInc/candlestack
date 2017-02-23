@@ -1,12 +1,10 @@
 package io.codearcs.candlestack.aws.elasticbeanstalk;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.aws.AWSMetric;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
-import io.codearcs.candlestack.aws.resources.AWSResourceFetcher;
 import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
@@ -16,14 +14,14 @@ public enum EBGraphiteMetric implements AWSMetric {
 	DiskUtilization( "check-disk-utilization", "check-aws-ec2-disk-utilization", "check-aws-eb-disk-utilization-via-es.sh" ),
 	FreeMemory( "check-free-memory", "check-aws-ec2-free-memory", "check-aws-eb-free-memory-via-es.sh" );
 
-	private String serviceName, commandName, resourceName, logsHost, logsAuthToken;
+	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
 
 
-	private EBGraphiteMetric( String serviceName, String commandName, String resourceName ) {
+	private EBGraphiteMetric( String serviceName, String commandName, String scriptFileName ) {
 
 		this.serviceName = serviceName;
 		this.commandName = commandName;
-		this.resourceName = resourceName;
+		this.scriptFileName = scriptFileName;
 
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
@@ -34,21 +32,25 @@ public enum EBGraphiteMetric implements AWSMetric {
 	}
 
 
+	@Override
 	public String getServiceName() {
 		return serviceName;
 	}
 
 
+	@Override
 	public String getCommandName() {
 		return commandName;
 	}
 
 
-	public String getResourceName() {
-		return resourceName;
+	@Override
+	public String getScriptFileName() {
+		return scriptFileName;
 	}
 
 
+	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
 
 		long warning = GlobalAWSProperties.getEBGraphiteMetricWarningLevel( instanceId, this );
@@ -61,13 +63,10 @@ public enum EBGraphiteMetric implements AWSMetric {
 	}
 
 
+	@Override
 	public Command getMonitorCommand( String relativePathToMonitorResource ) {
-		return new Command( commandName, relativePathToMonitorResource + resourceName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
+		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
 	}
 
-
-	public InputStream getResourceStream() {
-		return AWSResourceFetcher.fetchInputStream( this, resourceName );
-	}
 
 }

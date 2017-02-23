@@ -1,6 +1,5 @@
 package io.codearcs.candlestack.aws.sqs;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -10,7 +9,6 @@ import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CloudWatchStatistic;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.aws.cloudwatch.CloudWatchMetric;
-import io.codearcs.candlestack.aws.resources.AWSResourceFetcher;
 import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
@@ -22,16 +20,16 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 	private static final String NAMESPACE = "AWS/SQS",
 			DIMENSION_KEY = "QueueName";
 
-	private String serviceName, commandName, resourceName, logsHost, logsAuthToken;
+	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;
 
 
-	private SQSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String resourceName ) {
+	private SQSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
-		this.resourceName = resourceName;
+		this.scriptFileName = scriptFileName;
 
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
@@ -61,8 +59,8 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 
 
 	@Override
-	public String getResourceName() {
-		return resourceName;
+	public String getScriptFileName() {
+		return scriptFileName;
 	}
 
 
@@ -81,13 +79,7 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Command getMonitorCommand( String relativePathToMonitorResource ) {
-		return new Command( commandName, relativePathToMonitorResource + resourceName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
-	}
-
-
-	@Override
-	public InputStream getResourceStream() {
-		return AWSResourceFetcher.fetchInputStream( this, resourceName );
+		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
 	}
 
 

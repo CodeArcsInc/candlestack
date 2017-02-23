@@ -10,7 +10,9 @@ import java.util.Set;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 
+import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
+import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
@@ -57,15 +59,15 @@ public class SQSHostMonitorLookup implements HostMonitorLookup {
 
 
 	@Override
-	public Map<String, InputStream> getMonitorResources() {
+	public Map<String, InputStream> getMonitorResources() throws CandlestackException {
 		Map<String, InputStream> resourceMap = new HashMap<>();
 
 		for ( SQSQueueAttribute attribute : queueAttributes ) {
-			resourceMap.put( attribute.getResourceName(), attribute.getResourceStream() );
+			resourceMap.put( attribute.getScriptFileName(), ScriptFetcher.fetchInputStream( attribute.getScriptFileName() ) );
 		}
 
 		for ( SQSCloudWatchMetric metric : cloudWatchMetrics ) {
-			resourceMap.put( metric.getResourceName(), metric.getResourceStream() );
+			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
 		return resourceMap;

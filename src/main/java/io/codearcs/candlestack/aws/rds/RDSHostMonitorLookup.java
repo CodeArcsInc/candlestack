@@ -14,6 +14,7 @@ import com.amazonaws.services.rds.model.DescribeDBInstancesResult;
 
 import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
+import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
@@ -55,7 +56,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 	public Map<String, InputStream> getMonitorResources() throws CandlestackException {
 		Map<String, InputStream> resourceMap = new HashMap<>();
 		for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
-			resourceMap.put( metric.getResourceName(), metric.getResourceStream() );
+			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 		return resourceMap;
 	}

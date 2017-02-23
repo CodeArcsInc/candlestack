@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.Instance;
@@ -14,7 +17,9 @@ import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalk;
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClientBuilder;
 import com.amazonaws.services.elasticbeanstalk.model.EnvironmentDescription;
 
+import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
+import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
@@ -23,6 +28,8 @@ import io.codearcs.candlestack.nagios.object.hosts.HostGroup;
 
 
 public class EBHostMonitorLookup implements HostMonitorLookup {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger( EBHostMonitorLookup.class );
 
 	private AWSElasticBeanstalk beanstalkClient;
 
@@ -61,16 +68,16 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 
 	@Override
-	public Map<String, InputStream> getMonitorResources() {
+	public Map<String, InputStream> getMonitorResources() throws CandlestackException {
 
 		Map<String, InputStream> resourceMap = new HashMap<>();
 
 		for ( EBGraphiteMetric metric : graphiteMetrics ) {
-			resourceMap.put( metric.getResourceName(), metric.getResourceStream() );
+			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
 		for ( EBCloudWatchMetric metric : cloudWatchMetrics ) {
-			resourceMap.put( metric.getResourceName(), metric.getResourceStream() );
+			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
 		return resourceMap;
@@ -109,6 +116,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 			// Skip over ineligible environments
 			if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix ) ) {
+				LOGGER.info( "EBHostMonitorLookup determined environment [" + environment + "] is not eligible" );
 				continue;
 			}
 

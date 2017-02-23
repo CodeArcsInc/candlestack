@@ -1,13 +1,11 @@
 package io.codearcs.candlestack.aws.sqs;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.AWSMetric;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
-import io.codearcs.candlestack.aws.resources.AWSResourceFetcher;
 import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
@@ -18,13 +16,13 @@ public enum SQSQueueAttribute implements AWSMetric {
 	LastModifiedTimestamp( "check-queue-last-modified", "check-aws-sqs-queue-last-modified", "check-aws-sqs-queue-last-modified-via-es.sh" );
 
 
-	private String serviceName, commandName, resourceName, logsHost, logsAuthToken;
+	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
 
 
-	private SQSQueueAttribute( String serviceName, String commandName, String resourceName ) {
+	private SQSQueueAttribute( String serviceName, String commandName, String scriptFileName ) {
 		this.serviceName = serviceName;
 		this.commandName = commandName;
-		this.resourceName = resourceName;
+		this.scriptFileName = scriptFileName;
 
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
@@ -48,8 +46,8 @@ public enum SQSQueueAttribute implements AWSMetric {
 
 
 	@Override
-	public String getResourceName() {
-		return resourceName;
+	public String getScriptFileName() {
+		return scriptFileName;
 	}
 
 
@@ -68,13 +66,8 @@ public enum SQSQueueAttribute implements AWSMetric {
 
 	@Override
 	public Command getMonitorCommand( String relativePathToMonitorResource ) {
-		return new Command( commandName, relativePathToMonitorResource + resourceName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
+		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
 	}
 
-
-	@Override
-	public InputStream getResourceStream() {
-		return AWSResourceFetcher.fetchInputStream( this, resourceName );
-	}
 
 }

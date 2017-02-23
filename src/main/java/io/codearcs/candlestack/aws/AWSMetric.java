@@ -1,6 +1,5 @@
 package io.codearcs.candlestack.aws;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
@@ -16,7 +15,7 @@ public interface AWSMetric {
 	public String getCommandName();
 
 
-	public String getResourceName();
+	public String getScriptFileName();
 
 
 	// TODO consider using default methods for these following methods
@@ -25,8 +24,5 @@ public interface AWSMetric {
 
 
 	public Command getMonitorCommand( String relativePathToMonitorResource );
-
-
-	public InputStream getResourceStream();
 
 }
