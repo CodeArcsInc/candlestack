@@ -24,7 +24,7 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 
 	private AmazonRDS rdsClient;
 
-	private String dbInstancePrefix;
+	private String dbInstancePrefix, dbInstanceRegex;
 
 	private CloudWatchAccessor cloudWatchAccessor;
 
@@ -33,6 +33,7 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 		super( RDSUtil.TYPE_NAME, GlobalAWSProperties.getRDSMetricsFetcherSleep() );
 
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
+		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
 		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetrics();
 
@@ -51,7 +52,7 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 			for ( DBInstance dbInstance : dbInstanceResults.getDBInstances() ) {
 
 				String dbInstanceId = dbInstance.getDBInstanceIdentifier();
-				if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix ) ) {
+				if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex ) ) {
 					continue;
 				}
 

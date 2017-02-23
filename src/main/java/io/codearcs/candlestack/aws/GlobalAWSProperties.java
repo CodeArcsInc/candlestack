@@ -66,6 +66,7 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 */
 
 	private static final String EB_ENVIRONMENT_NAME_PREFIX = "aws.eb.environment.name.prefix",
+			EB_ENVIRONMENT_NAME_REGEX = "aws.eb.environment.name.regex",
 			EB_METRICS_FETCHER_SLEEP = "aws.eb.metrics.fetcher.sleep.min",
 			EB_CLOUDWATCH_METRICS = "aws.eb.cloudwatch.metrics",
 			EB_ENABLED = "aws.eb.enabled";
@@ -82,6 +83,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getEBEnvrionmentNamePrefix() throws CandlestackPropertiesException {
 		return getStringProperty( EB_ENVIRONMENT_NAME_PREFIX, "" ).trim();
+	}
+
+
+	public static String getEBEnvrionmentNameRegex() throws CandlestackPropertiesException {
+		return getStringProperty( EB_ENVIRONMENT_NAME_REGEX, "" ).trim();
 	}
 
 
@@ -181,6 +187,7 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 */
 
 	private static final String SQS_QUEUE_NAME_PREFIX = "aws.sqs.queue.name.prefix",
+			SQS_QUEUE_NAME_REGEX = "aws.sqs.queue.name.regex",
 			SQS_MONITOR_DEAD_LETTER = "aws.sqs.monitor.deadletter",
 			SQS_METRICS_FETCHER_SLEEP = "aws.sqs.metrics.fetcher.sleep.min",
 			SQS_QUEUE_ATTRIBUTES = "aws.sqs.queue.attributes",
@@ -201,6 +208,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getSQSQueueNamePrefix() throws CandlestackPropertiesException {
 		return getStringProperty( SQS_QUEUE_NAME_PREFIX, "" ).trim();
+	}
+
+
+	public static String getSQSQueueNameRegex() throws CandlestackPropertiesException {
+		return getStringProperty( SQS_QUEUE_NAME_REGEX, "" ).trim();
 	}
 
 
@@ -267,6 +279,7 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 */
 
 	private static final String RDS_DBINSTANCE_PREFIX = "aws.rds.dbinstance.prefix",
+			RDS_DBINSTANCE_REGEX = "aws.rds.dbinstance.regex",
 			RDS_METRICS_FETCHER_SLEEP = "aws.rds.metrics.fetcher.sleep.min",
 			RDS_CLOUDWATCH_METRICS = "aws.rds.cloudwatch.metrics",
 			RDS_ENABLED = "aws.rds.enabled";
@@ -283,6 +296,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getRDSDBInstancePrefix() throws CandlestackPropertiesException {
 		return getStringProperty( RDS_DBINSTANCE_PREFIX, "" ).trim();
+	}
+
+
+	public static String getRDSDBInstanceRegex() throws CandlestackPropertiesException {
+		return getStringProperty( RDS_DBINSTANCE_REGEX, "" ).trim();
 	}
 
 

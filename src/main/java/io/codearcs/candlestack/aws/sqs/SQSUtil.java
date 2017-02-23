@@ -11,13 +11,16 @@ public class SQSUtil {
 	}
 
 
-	public static boolean isQueueEligible( String queueName, String queueNamePrefix, boolean deadLetterEnabled ) {
+	public static boolean isQueueEligible( String queueName, String queueNamePrefix, String queueNameRegex, boolean deadLetterEnabled ) {
+		boolean eligble = true;
 		if ( !deadLetterEnabled && queueName.equals( "dead-letter" ) ) {
-			return false;
+			eligble = false;
 		} else if ( !queueName.equals( "dead-letter" ) && !queueNamePrefix.isEmpty() && !queueName.startsWith( queueNamePrefix ) ) {
-			return false;
+			eligble = false;
+		} else if ( !queueName.equals( "dead-letter" ) && !queueNameRegex.isEmpty() && !queueName.matches( queueNameRegex ) ) {
+			eligble = false;
 		}
-		return true;
+		return eligble;
 	}
 
 }

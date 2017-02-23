@@ -25,7 +25,7 @@ public class SQSMetricsFetcher extends MetricsFetcher {
 
 	private AmazonSQS sqsClient;
 
-	private String queueNamePrefix;
+	private String queueNamePrefix, queueNameRegex;
 
 	private boolean monitorDeadLetter;
 
@@ -40,6 +40,7 @@ public class SQSMetricsFetcher extends MetricsFetcher {
 		super( SQSUtil.TYPE_NAME, GlobalAWSProperties.getSQSMetricsFetcherSleep() );
 
 		queueNamePrefix = GlobalAWSProperties.getSQSQueueNamePrefix();
+		queueNameRegex = GlobalAWSProperties.getSQSQueueNameRegex();
 
 		monitorDeadLetter = GlobalAWSProperties.isSQSMonitorDeadLetterEnabled();
 
@@ -65,7 +66,7 @@ public class SQSMetricsFetcher extends MetricsFetcher {
 
 				// Extract the queue name from the URL and see if we want to monitor it
 				String queueName = SQSUtil.getQueueNameFromURL( sqsQueueUrl );
-				if ( !SQSUtil.isQueueEligible( queueName, queueNamePrefix, monitorDeadLetter ) ) {
+				if ( !SQSUtil.isQueueEligible( queueName, queueNamePrefix, queueNameRegex, monitorDeadLetter ) ) {
 					continue;
 				}
 

@@ -30,7 +30,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 	private AmazonRDS rdsClient;
 
-	private String dbInstancePrefix;
+	private String dbInstancePrefix, dbInstanceRegex;
 
 
 	public RDSHostMonitorLookup( Set<String> contactGroups ) throws CandlestackPropertiesException {
@@ -38,6 +38,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		this.contactGroups = contactGroups;
 
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
+		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
 		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetrics();
 
@@ -83,7 +84,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		for ( DBInstance dbInstance : dbInstanceResults.getDBInstances() ) {
 
 			String dbInstanceId = dbInstance.getDBInstanceIdentifier();
-			if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix ) ) {
+			if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex ) ) {
 				continue;
 			}
 

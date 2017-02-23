@@ -26,7 +26,7 @@ public class SQSHostMonitorLookup implements HostMonitorLookup {
 
 	private Set<String> contactGroups;
 
-	private String queueNamePrefix;
+	private String queueNamePrefix, queueNameRegex;
 
 	private boolean monitorDeadLetter;
 
@@ -40,6 +40,7 @@ public class SQSHostMonitorLookup implements HostMonitorLookup {
 		this.contactGroups = contactGroups;
 
 		queueNamePrefix = GlobalAWSProperties.getSQSQueueNamePrefix();
+		queueNameRegex = GlobalAWSProperties.getSQSQueueNameRegex();
 
 		monitorDeadLetter = GlobalAWSProperties.isSQSMonitorDeadLetterEnabled();
 
@@ -104,7 +105,7 @@ public class SQSHostMonitorLookup implements HostMonitorLookup {
 
 			// Extract the queue name from the URL and see if we want to monitor it
 			String queueName = SQSUtil.getQueueNameFromURL( sqsQueueUrl );
-			if ( !SQSUtil.isQueueEligible( queueName, queueNamePrefix, monitorDeadLetter ) ) {
+			if ( !SQSUtil.isQueueEligible( queueName, queueNamePrefix, queueNameRegex, monitorDeadLetter ) ) {
 				continue;
 			}
 

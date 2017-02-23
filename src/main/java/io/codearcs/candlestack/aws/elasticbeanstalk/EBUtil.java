@@ -20,27 +20,29 @@ public class EBUtil {
 	public static final String TYPE_NAME = "aws_eb";
 
 
-	public static boolean isEnvironmentEligible( EnvironmentDescription environment, String environmentNamePrefix ) {
+	public static boolean isEnvironmentEligible( EnvironmentDescription environment, String environmentNamePrefix, String environmentNameRegex ) {
 		boolean eligible = true;
 		if ( !environment.getStatus().equalsIgnoreCase( "Ready" ) ) {
 			eligible = false;
-		} else if ( !environmentNamePrefix.isEmpty() && !environment.getEnvironmentName().startsWith( environmentNamePrefix ) ) {
+		} else if ( !isEnvironmentEligible( environment.getEnvironmentName(), environmentNamePrefix, environmentNameRegex ) ) {
 			eligible = false;
 		}
 		return eligible;
 	}
 
 
-	public static boolean isEnvironmentEligible( String environmentName, String environmentNamePrefix ) {
+	public static boolean isEnvironmentEligible( String environmentName, String environmentNamePrefix, String environmentNameRegex ) {
 		boolean eligible = true;
 		if ( !environmentNamePrefix.isEmpty() && !environmentName.startsWith( environmentNamePrefix ) ) {
 			eligible = false;
+		} else if ( !environmentNameRegex.isEmpty() && !environmentName.matches( environmentNameRegex ) ) {
+			eligible = false;
 		}
 		return eligible;
 	}
 
 
-	public static Map<String, List<Instance>> lookupInstances( AmazonEC2 ec2Client, String environmentNamePrefix ) {
+	public static Map<String, List<Instance>> lookupInstances( AmazonEC2 ec2Client, String environmentNamePrefix, String environmentNameRegex ) {
 
 		// We only care about those EC2 instance created by ElasticBeanstalk
 		DescribeInstancesRequest request = new DescribeInstancesRequest().withFilters( new Filter().withName( "tag-key" ).withValues( "elasticbeanstalk:environment-name" ) );
@@ -61,7 +63,7 @@ public class EBUtil {
 				}
 
 				String environmentName = getTagValue( instance, "elasticbeanstalk:environment-name" );
-				if ( EBUtil.isEnvironmentEligible( environmentName, environmentNamePrefix ) ) {
+				if ( EBUtil.isEnvironmentEligible( environmentName, environmentNamePrefix, environmentNameRegex ) ) {
 
 					List<Instance> instances = environmentInstanceMap.get( environmentName );
 					if ( instances == null ) {

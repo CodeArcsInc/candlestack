@@ -30,7 +30,7 @@ public class EBMetricsFetcher extends MetricsFetcher {
 
 	private AmazonEC2 ec2Client;
 
-	private String environmentNamePrefix;
+	private String environmentNamePrefix, environmentNameRegex;
 
 	private Set<EC2CloudWatchMetric> ec2CloudWatchMetrics;
 
@@ -43,6 +43,7 @@ public class EBMetricsFetcher extends MetricsFetcher {
 		super( EBUtil.TYPE_NAME, GlobalAWSProperties.getEBMetricsFetcherSleep() );
 
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
+		environmentNameRegex = GlobalAWSProperties.getEBEnvrionmentNameRegex();
 
 		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetrics();
 
@@ -62,13 +63,13 @@ public class EBMetricsFetcher extends MetricsFetcher {
 		try {
 
 			// Go ahead and fetch the EC2 instances in bulk rather than making calls for the individual environments
-			Map<String, List<Instance>> environmentInstanceMap = EBUtil.lookupInstances( ec2Client, environmentNamePrefix );
+			Map<String, List<Instance>> environmentInstanceMap = EBUtil.lookupInstances( ec2Client, environmentNamePrefix, environmentNameRegex );
 
 			// Look through the environments for eligible ones
 			for ( EnvironmentDescription environment : beanstalkClient.describeEnvironments().getEnvironments() ) {
 
 				// Skip over ineligible environments
-				if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix ) ) {
+				if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix, environmentNameRegex ) ) {
 					continue;
 				}
 
