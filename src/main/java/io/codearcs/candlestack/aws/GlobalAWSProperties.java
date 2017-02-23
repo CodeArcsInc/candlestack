@@ -5,8 +5,9 @@ import java.util.Set;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.GlobalCandlestackProperties;
+import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
+import io.codearcs.candlestack.aws.ec2.EC2GraphiteMetric;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBCloudWatchMetric;
-import io.codearcs.candlestack.aws.elasticbeanstalk.EBGraphiteMetric;
 import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 import io.codearcs.candlestack.aws.sqs.SQSCloudWatchMetric;
 import io.codearcs.candlestack.aws.sqs.SQSQueueAttribute;
@@ -66,14 +67,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	private static final String EB_ENVIRONMENT_NAME_PREFIX = "aws.eb.environment.name.prefix",
 			EB_METRICS_FETCHER_SLEEP = "aws.eb.metrics.fetcher.sleep.min",
-			EB_GRAPHITE_METRICS = "aws.eb.graphite.metrics",
 			EB_CLOUDWATCH_METRICS = "aws.eb.cloudwatch.metrics",
 			EB_ENABLED = "aws.eb.enabled";
 
 
-	private static final String EB_GRAPHITE_METRIC_WARNING_PREFIX = "aws.eb.graphite.metric.warning.",
-			EB_GRAPHITE_METRIC_CRITICAL_PREFIX = "aws.eb.graphite.metric.critical.",
-			EB_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.eb.cloudwatch.metric.warning.",
+	private static final String EB_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.eb.cloudwatch.metric.warning.",
 			EB_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.eb.cloudwatch.metric.critical.";
 
 
@@ -92,19 +90,6 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<EBGraphiteMetric> getEBGraphiteMetrics() throws CandlestackPropertiesException {
-		Set<EBGraphiteMetric> graphiteMetrics = new HashSet<>();
-		try {
-			for ( String metric : getSetProperty( EB_GRAPHITE_METRICS, true ) ) {
-				graphiteMetrics.add( EBGraphiteMetric.valueOf( metric ) );
-			}
-		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EB_GRAPHITE_METRICS + "]" );
-		}
-		return graphiteMetrics;
-	}
-
-
 	public static Set<EBCloudWatchMetric> getEBCloudwatchMetrics() throws CandlestackPropertiesException {
 		Set<EBCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
 		try {
@@ -115,16 +100,6 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EB_CLOUDWATCH_METRICS + "]" );
 		}
 		return cloudWatchMetrics;
-	}
-
-
-	public static long getEBGraphiteMetricWarningLevel( String queueName, EBGraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EB_GRAPHITE_METRIC_WARNING_PREFIX, metric.name(), queueName );
-	}
-
-
-	public static long getEBGraphiteMetricCriticalLevel( String queueName, EBGraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EB_GRAPHITE_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
 	}
 
 
@@ -142,7 +117,62 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 * Properties related to EC2
 	 * ---------------------------------------
 	 */
+	private static final String EC2_METRICS_FETCHER_SLEEP = "aws.ec2.metrics.fetcher.sleep.min",
+			EC2_GRAPHITE_METRICS = "aws.ec2.graphite.metrics",
+			EC2_CLOUDWATCH_METRICS = "aws.ec2.cloudwatch.metrics",
+			EC2_ENABLED = "aws.ec2.enabled";
 
+
+	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
+			EC2_GRAPHITE_METRIC_CRITICAL_PREFIX = "aws.ec2.graphite.metric.critical.",
+			EC2_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.ec2.cloudwatch.metric.warning.",
+			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.";
+
+
+	public static Set<EC2GraphiteMetric> getEC2GraphiteMetrics() throws CandlestackPropertiesException {
+		Set<EC2GraphiteMetric> graphiteMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( EC2_GRAPHITE_METRICS, true ) ) {
+				graphiteMetrics.add( EC2GraphiteMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_GRAPHITE_METRICS + "]" );
+		}
+		return graphiteMetrics;
+	}
+
+
+	public static Set<EC2CloudWatchMetric> getEC2CloudwatchMetrics() throws CandlestackPropertiesException {
+		Set<EC2CloudWatchMetric> cloudWatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( EC2_CLOUDWATCH_METRICS, true ) ) {
+				cloudWatchMetrics.add( EC2CloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_CLOUDWATCH_METRICS + "]" );
+		}
+		return cloudWatchMetrics;
+	}
+
+
+	public static long getEC2GraphiteMetricWarningLevel( String queueName, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_GRAPHITE_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	}
+
+
+	public static long getEC2GraphiteMetricCriticalLevel( String queueName, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_GRAPHITE_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	}
+
+
+	public static long getEC2CloudWatchMetricWarningLevel( String queueName, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	}
+
+
+	public static long getEC2CloudWatchMetricCriticalLevel( String queueName, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	}
 
 	/*
 	 * ---------------------------------------

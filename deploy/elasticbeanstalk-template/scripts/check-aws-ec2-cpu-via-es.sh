@@ -44,7 +44,7 @@ function get_query {
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "type:(\"aws_eb\")"
+						"query": "type:(\"aws_ec2\")"
 					  }
 					}
 				  }

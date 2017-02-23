@@ -22,7 +22,7 @@ public class EBUtil {
 
 	public static boolean isEnvironmentEligible( EnvironmentDescription environment, String environmentNamePrefix ) {
 		boolean eligible = true;
-		if ( !environment.getStatus().equals( "Ready" ) ) {
+		if ( !environment.getStatus().equalsIgnoreCase( "Ready" ) ) {
 			eligible = false;
 		} else if ( !environmentNamePrefix.isEmpty() && !environment.getEnvironmentName().startsWith( environmentNamePrefix ) ) {
 			eligible = false;

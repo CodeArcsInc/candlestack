@@ -18,6 +18,8 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.MetricsFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.aws.cloudwatch.CloudWatchAccessor;
+import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
+import io.codearcs.candlestack.aws.ec2.EC2Util;
 
 
 public class EBMetricsFetcher extends MetricsFetcher {
@@ -30,7 +32,9 @@ public class EBMetricsFetcher extends MetricsFetcher {
 
 	private String environmentNamePrefix;
 
-	private Set<EBCloudWatchMetric> cloudWatchMetrics;
+	private Set<EC2CloudWatchMetric> ec2CloudWatchMetrics;
+
+	private Set<EBCloudWatchMetric> ebCloudWatchMetrics;
 
 	private CloudWatchAccessor cloudWatchAccessor;
 
@@ -40,7 +44,9 @@ public class EBMetricsFetcher extends MetricsFetcher {
 
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
 
-		cloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
+		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetrics();
+
+		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
 
 		String region = GlobalAWSProperties.getRegion();
 		beanstalkClient = AWSElasticBeanstalkClientBuilder.standard().withRegion( region ).build();
@@ -66,18 +72,20 @@ public class EBMetricsFetcher extends MetricsFetcher {
 					continue;
 				}
 
+				// Retrieve the EB cloud watch metrics
+				for ( EBCloudWatchMetric cloudWatchMetric : ebCloudWatchMetrics ) {
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, environment.getEnvironmentName(), EBUtil.TYPE_NAME );
+				}
+
+				// For each instance fetch the ec2 cloud watch metrics
 				List<Instance> instances = environmentInstanceMap.get( environment.getEnvironmentName() );
 				if ( instances != null ) {
-
 					for ( Instance instance : instances ) {
-
 						String instanceId = instance.getInstanceId();
-						for ( EBCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
-							cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, instanceId, EBUtil.TYPE_NAME );
+						for ( EC2CloudWatchMetric cloudWatchMetric : ec2CloudWatchMetrics ) {
+							cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, instanceId, EC2Util.TYPE_NAME );
 						}
-
 					}
-
 				}
 
 			}

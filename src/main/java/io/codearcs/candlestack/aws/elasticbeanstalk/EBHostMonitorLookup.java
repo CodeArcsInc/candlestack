@@ -21,6 +21,8 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
+import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
+import io.codearcs.candlestack.aws.ec2.EC2GraphiteMetric;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.hosts.Host;
@@ -39,9 +41,11 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 	private String environmentNamePrefix;
 
-	private Set<EBGraphiteMetric> graphiteMetrics;
+	private Set<EC2CloudWatchMetric> ec2CloudWatchMetrics;
 
-	private Set<EBCloudWatchMetric> cloudWatchMetrics;
+	private Set<EC2GraphiteMetric> ec2GraphiteMetrics;
+
+	private Set<EBCloudWatchMetric> ebCloudWatchMetrics;
 
 
 	public EBHostMonitorLookup( Set<String> contactGroups ) throws CandlestackPropertiesException {
@@ -50,9 +54,11 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
 
-		graphiteMetrics = GlobalAWSProperties.getEBGraphiteMetrics();
+		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetrics();
 
-		cloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
+		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetrics();
+
+		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
 
 		String region = GlobalAWSProperties.getRegion();
 		beanstalkClient = AWSElasticBeanstalkClientBuilder.standard().withRegion( region ).build();
@@ -72,11 +78,15 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 		Map<String, InputStream> resourceMap = new HashMap<>();
 
-		for ( EBGraphiteMetric metric : graphiteMetrics ) {
+		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
-		for ( EBCloudWatchMetric metric : cloudWatchMetrics ) {
+		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
+		}
+
+		for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
@@ -90,11 +100,15 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 		List<Command> commands = new ArrayList<>();
 
-		for ( EBGraphiteMetric metric : graphiteMetrics ) {
+		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
 			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
 		}
 
-		for ( EBCloudWatchMetric metric : cloudWatchMetrics ) {
+		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
+		}
+
+		for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
 			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
 		}
 
@@ -147,11 +161,15 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 		String alias = EBUtil.getTagValue( instance, "Name" );
 		Host host = new Host( instance.getInstanceId(), alias, instance.getPublicIpAddress(), contactGroups );
 
-		for ( EBGraphiteMetric metric : graphiteMetrics ) {
+		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
 			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
 		}
 
-		for ( EBCloudWatchMetric metric : cloudWatchMetrics ) {
+		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
+		}
+
+		for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
 			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
 		}
 

@@ -1,4 +1,4 @@
-package io.codearcs.candlestack.aws.elasticbeanstalk;
+package io.codearcs.candlestack.aws.ec2;
 
 import java.util.Set;
 
@@ -13,19 +13,19 @@ import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
 
-public enum EBCloudWatchMetric implements CloudWatchMetric {
+public enum EC2CloudWatchMetric implements CloudWatchMetric {
 
-	EnvironmentHealth( CloudWatchStatistic.Maximum, "check-environment-health", "check-aws-eb-environment-health", "check-aws-eb-environment-health-via-es.sh" );
+	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-eb-cpu", "check-aws-eb-cpu-via-es.sh" );
 
-	private static final String NAMESPACE = "AWS/ElasticBeanstalk",
-			DIMENSION_KEY = "EnvironmentName";
+	private static final String NAMESPACE = "AWS/EC2",
+			DIMENSION_KEY = "InstanceId";
 
 	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;
 
 
-	private EBCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName ) {
+	private EC2CloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
@@ -67,8 +67,8 @@ public enum EBCloudWatchMetric implements CloudWatchMetric {
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
 
-		long warning = GlobalAWSProperties.getEBCloudWatchMetricWarningLevel( instanceId, this );
-		long critical = GlobalAWSProperties.getEBCloudWatchMetricCriticalLevel( instanceId, this );
+		long warning = GlobalAWSProperties.getEC2CloudWatchMetricWarningLevel( instanceId, this );
+		long critical = GlobalAWSProperties.getEC2CloudWatchMetricCriticalLevel( instanceId, this );
 
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 

@@ -1,4 +1,4 @@
-package io.codearcs.candlestack.aws.elasticbeanstalk;
+package io.codearcs.candlestack.aws.ec2;
 
 import java.util.Set;
 
@@ -9,15 +9,15 @@ import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
 
-public enum EBGraphiteMetric implements AWSMetric {
+public enum EC2GraphiteMetric implements AWSMetric {
 
-	DiskUtilization( "check-disk-utilization", "check-aws-ec2-disk-utilization", "check-aws-eb-disk-utilization-via-es.sh" ),
-	FreeMemory( "check-free-memory", "check-aws-ec2-free-memory", "check-aws-eb-free-memory-via-es.sh" );
+	DiskUtilization( "check-disk-utilization", "check-aws-ec2-disk-utilization", "check-aws-ec2-disk-utilization-via-es.sh" ),
+	FreeMemory( "check-free-memory", "check-aws-ec2-free-memory", "check-aws-ec2-free-memory-via-es.sh" );
 
 	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
 
 
-	private EBGraphiteMetric( String serviceName, String commandName, String scriptFileName ) {
+	private EC2GraphiteMetric( String serviceName, String commandName, String scriptFileName ) {
 
 		this.serviceName = serviceName;
 		this.commandName = commandName;
@@ -53,8 +53,8 @@ public enum EBGraphiteMetric implements AWSMetric {
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
 
-		long warning = GlobalAWSProperties.getEBGraphiteMetricWarningLevel( instanceId, this );
-		long critical = GlobalAWSProperties.getEBGraphiteMetricCriticalLevel( instanceId, this );
+		long warning = GlobalAWSProperties.getEC2GraphiteMetricWarningLevel( instanceId, this );
+		long critical = GlobalAWSProperties.getEC2GraphiteMetricCriticalLevel( instanceId, this );
 
 		String command = commandName + "!" + instanceId + "!" + warning + "!" + critical;
 
@@ -67,6 +67,5 @@ public enum EBGraphiteMetric implements AWSMetric {
 	public Command getMonitorCommand( String relativePathToMonitorResource ) {
 		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
 	}
-
 
 }
