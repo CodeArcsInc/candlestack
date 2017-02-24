@@ -79,7 +79,6 @@ public class CloudWatchAccessor {
 
 		// Build the request and execute it
 		GetMetricStatisticsRequest request = cloudWatchRequest( metric, dimensionValue, lastDatapointDate );
-		System.out.println( "Made a CloudWatch request : " + metric.getNamespace() + " - " + metric.getName() + " - " + dimensionValue );
 		GetMetricStatisticsResult result = cloudWatchClient.getMetricStatistics( request );
 
 		// Sort the datapoints in chronological order
