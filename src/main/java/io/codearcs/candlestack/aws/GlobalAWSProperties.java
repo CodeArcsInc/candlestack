@@ -9,6 +9,7 @@ import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
 import io.codearcs.candlestack.aws.ec2.EC2GraphiteMetric;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBCloudWatchMetric;
 import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
+import io.codearcs.candlestack.aws.s3.S3MetadataMetric;
 import io.codearcs.candlestack.aws.sqs.SQSCloudWatchMetric;
 import io.codearcs.candlestack.aws.sqs.SQSQueueAttribute;
 
@@ -329,6 +330,60 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static long getRDSCloudWatchMetricCriticalLevel( String queueName, RDSCloudWatchMetric metric ) throws CandlestackPropertiesException {
 		return determineAlertValue( RDS_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	}
+
+
+	/*
+	 * ---------------------------------------
+	 * Properties related to S3
+	 * ---------------------------------------
+	 */
+
+	private static final String S3_LOCATIONS = "aws.s3.locations",
+			S3_METRICS_FETCHER_SLEEP = "aws.s3.metrics.fetcher.sleep.min",
+			S3_METADATA_METRICS = "aws.s3.metadata.metrics",
+			S3_ENABLED = "aws.s3.enabled";
+
+
+	private static final String S3_METADATA_METRIC_WARNING_PREFIX = "aws.s3.metadata.metric.warning.",
+			S3_METADATA_METRIC_CRITICAL_PREFIX = "aws.s3.metadata.metric.critical.";
+
+
+	public static boolean isS3Enabled() throws CandlestackPropertiesException {
+		return getBooleanProperty( S3_ENABLED, false );
+	}
+
+
+	public static int getS3MetricsFetcherSleep() throws CandlestackPropertiesException {
+		return getIntProperty( S3_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
+
+
+	public static String getS3Locations() throws CandlestackPropertiesException {
+		return getStringProperty( S3_LOCATIONS, "" ).trim();
+	}
+
+
+	public static Set<S3MetadataMetric> getS3MetadataMetrics() throws CandlestackPropertiesException {
+		Set<S3MetadataMetric> metadataMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( S3_METADATA_METRICS, true ) ) {
+				metadataMetrics.add( S3MetadataMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + S3_METADATA_METRICS + "]" );
+		}
+		return metadataMetrics;
+	}
+
+
+	public static long getS3MetadataMetricWarningLevel( String queueName, S3MetadataMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( S3_METADATA_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	}
+
+
+	public static long getS3MetadataMetricCriticalLevel( String queueName, S3MetadataMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( S3_METADATA_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
 	}
 
 
