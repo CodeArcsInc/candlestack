@@ -1,5 +1,7 @@
 package io.codearcs.candlestack.aws.rds;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -15,9 +17,12 @@ import io.codearcs.candlestack.nagios.object.services.Service;
 
 public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
-	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-rds-cpu", "check-aws-rds-cpu-via-es.sh" ),
-	DatabaseConnections( CloudWatchStatistic.Maximum, "check-db-connections", "check-aws-rds-db-connections", "check-aws-rds-db-connections-via-es.sh" ),
-	FreeStorageSpace( CloudWatchStatistic.Minimum, "check-free-storage", "check-aws-rds-free-storage", "check-aws-rds-free-storage-via-es.sh" );
+	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-rds-cpu", "check-aws-rds-cpu-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false ),
+	DatabaseConnections( CloudWatchStatistic.Maximum, "check-db-connections", "check-aws-rds-db-connections", "check-aws-rds-db-connections-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false ),
+	FreeStorageSpace( CloudWatchStatistic.Minimum, "check-free-storage", "check-aws-rds-free-storage", "check-aws-rds-free-storage-via-es.sh", new HashSet<>( Arrays.asList( RDSType.MARIADB ) ), false ),
+	VolumeBytesUsed( CloudWatchStatistic.Maximum, "check-storage-used", "check-aws-rds-storage-used", "check-aws-rds-storage-used-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false ),
+	AuroraReplicaLag( CloudWatchStatistic.Maximum, "check-replica-lag", "check-aws-rds-replica-lag", "check-aws-rds-replica-lag-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), true ),
+	ActiveTransactions( CloudWatchStatistic.Maximum, "check-active-transactions", "check-aws-rds-active-transactions", "check-aws-rds-active-transactions-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false );
 
 	private static final String NAMESPACE = "AWS/RDS",
 			DIMENSION_KEY = "DBInstanceIdentifier";
@@ -26,12 +31,18 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 	private CloudWatchStatistic statistic;
 
+	private Set<RDSType> supportedRDSTypes;
 
-	private RDSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName ) {
+	private boolean replicaOnly;
+
+
+	private RDSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, Set<RDSType> supportedRDSTypes, boolean replicaOnly ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
 		this.scriptFileName = scriptFileName;
+		this.supportedRDSTypes = supportedRDSTypes;
+		this.replicaOnly = replicaOnly;
 
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
@@ -63,6 +74,16 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 	@Override
 	public String getScriptFileName() {
 		return scriptFileName;
+	}
+
+
+	public boolean isRDSTypeSupported( RDSType rdsType ) {
+		return supportedRDSTypes.contains( rdsType );
+	}
+
+
+	public boolean isReplicaOnlyMetric() {
+		return replicaOnly;
 	}
 
 

@@ -48,16 +48,21 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 
 		try {
 
+			Set<String> replicaInstances = RDSUtil.getReplicaInstances( rdsClient );
+
 			DescribeDBInstancesResult dbInstanceResults = rdsClient.describeDBInstances();
 			for ( DBInstance dbInstance : dbInstanceResults.getDBInstances() ) {
 
 				String dbInstanceId = dbInstance.getDBInstanceIdentifier();
-				if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex ) ) {
+				RDSType rdsType = RDSType.getTypeFromEngine( dbInstance.getEngine() );
+				if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
 					continue;
 				}
 
 				for ( RDSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbInstanceId, RDSUtil.TYPE_NAME );
+					if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && ( !cloudWatchMetric.isReplicaOnlyMetric() || replicaInstances.contains( dbInstanceId ) ) ) {
+						cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbInstanceId, RDSUtil.TYPE_NAME );
+					}
 				}
 
 			}
