@@ -15,7 +15,7 @@ import io.codearcs.candlestack.nagios.object.services.Service;
 
 public enum EC2CloudWatchMetric implements CloudWatchMetric {
 
-	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-eb-cpu", "check-aws-eb-cpu-via-es.sh" );
+	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-ec2-cpu", "check-aws-ec2-cpu-via-es.sh" );
 
 	private static final String NAMESPACE = "AWS/EC2",
 			DIMENSION_KEY = "InstanceId";

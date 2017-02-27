@@ -35,7 +35,7 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
 		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
-		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetrics();
+		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetricsToFetch();
 
 		rdsClient = AmazonRDSClientBuilder.standard().withRegion( GlobalAWSProperties.getRegion() ).build();
 

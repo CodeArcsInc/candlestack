@@ -4,7 +4,7 @@
 
   <groupId>io.codearcs</groupId>
   <artifactId>candlestack</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <name>Candlestack</name>
   <description>A monitoring service that shines some light on your AWS stack</description>
   <url>https://github.com/CodeArcsInc/candlestack</url>

@@ -34,7 +34,7 @@ public class S3MetricsFetcher extends MetricsFetcher {
 	public S3MetricsFetcher() throws CandlestackException {
 		super( S3Util.TYPE_NAME, GlobalAWSProperties.getS3MetricsFetcherSleep() );
 
-		metadataMetrics = GlobalAWSProperties.getS3MetadataMetrics();
+		metadataMetrics = GlobalAWSProperties.getS3MetadataMetricsToFetch();
 
 		s3Client = AmazonS3ClientBuilder.defaultClient();
 
@@ -60,6 +60,7 @@ public class S3MetricsFetcher extends MetricsFetcher {
 								continue;
 							}
 							metricsReaderWriter.writeMetric( S3Util.TYPE_NAME, s3Location.getId(), new Date(), metadataMetric.name(), System.currentTimeMillis() - lastModified.getTime() );
+							break;
 						default :
 							LOGGER.error( "S3MetricsFetcher encountered an unsupported metadata metric [" + metadataMetric + "] while trying to fetch metrics" );
 							break;

@@ -32,7 +32,7 @@ public class S3HostMonitorLookup implements HostMonitorLookup {
 
 		s3Locations = S3Util.getS3Locations();
 
-		metadataMetrics = GlobalAWSProperties.getS3MetadataMetrics();
+		metadataMetrics = GlobalAWSProperties.getS3MetadataMetricsToMonitor();
 
 	}
 

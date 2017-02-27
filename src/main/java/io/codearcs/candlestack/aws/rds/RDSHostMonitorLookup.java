@@ -1,10 +1,15 @@
 package io.codearcs.candlestack.aws.rds;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import com.amazonaws.services.rds.AmazonRDS;
@@ -17,6 +22,7 @@ import com.amazonaws.services.rds.model.DescribeDBInstancesResult;
 
 import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
+import io.codearcs.candlestack.GlobalCandlestackProperties;
 import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
@@ -43,7 +49,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
 		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
-		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetrics();
+		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetricsToMonitor();
 
 		rdsClient = AmazonRDSClientBuilder.standard().withRegion( GlobalAWSProperties.getRegion() ).build();
 
@@ -83,14 +89,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		List<HostGroup> hostGroups = new ArrayList<>();
 
 		// Check for clusters and create a hostgroup for them
-		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
-		Map<String, HostGroup> clusterGroups = new HashMap<>();
-		for ( DBCluster cluster : dbClusterResults.getDBClusters() ) {
-			HostGroup clusterHostGroup = new HostGroup( cluster.getDBClusterIdentifier(), cluster.getDatabaseName() );
-			for ( DBClusterMember member : cluster.getDBClusterMembers() ) {
-				clusterGroups.put( member.getDBInstanceIdentifier(), clusterHostGroup );
-			}
-		}
+		Map<String, HostGroup> clusterGroups = lookupClusterGroups();
 
 		// Create a host group for non clustered instances
 		HostGroup nonClusterHostGroup = new HostGroup( "aws_rds_non_cluster", "AWS RDS Non-Clustered Instances" );
@@ -125,7 +124,9 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 		// Check the cluster groups to see if it has any instances
 		for ( HostGroup clusterGroup : clusterGroups.values() ) {
-			if ( !clusterGroup.getHosts().isEmpty() ) {
+			if ( clusterGroup.getHosts().size() > 1 ) {
+				hostGroups.add( clusterGroup );
+			} else if ( clusterGroup.getHosts().size() == 1 && !clusterGroup.getHosts().get( 0 ).getName().equals( clusterGroup.getName() ) ) {
 				hostGroups.add( clusterGroup );
 			}
 		}
@@ -135,12 +136,43 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 	}
 
 
+	private Map<String, HostGroup> lookupClusterGroups() throws CandlestackPropertiesException {
+		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
+		Map<String, HostGroup> clusterGroups = new HashMap<>();
+		for ( DBCluster cluster : dbClusterResults.getDBClusters() ) {
+
+			// Create the hostgroup for the cluster
+			HostGroup clusterHostGroup = new HostGroup( cluster.getDBClusterIdentifier(), cluster.getDatabaseName() );
+
+			// Now create a cluster host that will perform cluster level checks
+			RDSType rdsType = RDSType.getTypeFromEngine( cluster.getEngine() );
+			Host clusterHost = new Host( cluster.getDBClusterIdentifier(), "", "", contactGroups );
+			for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
+				if ( metric.isRDSTypeSupported( rdsType ) && metric.isClusterOnlyMetric() ) {
+					clusterHost.addService( metric.getService( cluster.getDBClusterIdentifier(), contactGroups ) );
+				}
+			}
+
+			// Check to see if we have any cluster level checks and thus whether or not the cluster host should be added to the cluster host group
+			if ( !clusterHost.getServices().isEmpty() ) {
+				clusterHostGroup.addHost( clusterHost );
+			}
+
+			for ( DBClusterMember member : cluster.getDBClusterMembers() ) {
+				clusterGroups.put( member.getDBInstanceIdentifier(), clusterHostGroup );
+			}
+
+		}
+		return clusterGroups;
+	}
+
+
 	private Host createHostForDBInstance( DBInstance dbInstance, RDSType rdsType, boolean isReplica ) throws CandlestackPropertiesException {
 
 		Host host = new Host( dbInstance.getDBInstanceIdentifier(), "", dbInstance.getEndpoint().getAddress(), contactGroups );
 
 		for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
-			if ( metric.isRDSTypeSupported( rdsType ) && ( !metric.isReplicaOnlyMetric() || isReplica ) ) {
+			if ( metric.isRDSTypeSupported( rdsType ) && !metric.isClusterOnlyMetric() && ( !metric.isReplicaOnlyMetric() || isReplica ) ) {
 				host.addService( metric.getService( dbInstance.getDBInstanceIdentifier(), contactGroups ) );
 			}
 		}
@@ -149,4 +181,40 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 	}
 
+
+	public static void main( String[] args ) {
+
+		File propsFile = new File( "/var/dev-candlestack.ini" );
+		if ( !propsFile.exists() ) {
+			System.out.println( "Provided ini file location doesn't exist [" + args[0] + "]" );
+			System.exit( -1 );
+		}
+
+		Properties props = new Properties();
+		try {
+			props.load( new FileInputStream( propsFile ) );
+		} catch ( IOException e ) {
+			System.out.println( "Encountered an error attempting to load properties file [" + propsFile.getAbsolutePath() + "]" );
+			e.printStackTrace();
+			System.exit( -1 );
+		}
+
+		try {
+
+			// Initialize the global properties
+			GlobalCandlestackProperties.init( props );
+
+			RDSHostMonitorLookup lookup = new RDSHostMonitorLookup( new HashSet<>() );
+			lookup.lookupHostsToMonitor();
+
+
+		} catch ( CandlestackException e ) {
+			System.out.println( "Encountered an error trying to start up Candlestack processes" );
+			e.printStackTrace();
+		} catch ( Throwable t ) {
+			System.out.println( "Encountered an unexpected error trying to start up Candlestack processes" );
+			t.printStackTrace();
+		}
+
+	}
 }

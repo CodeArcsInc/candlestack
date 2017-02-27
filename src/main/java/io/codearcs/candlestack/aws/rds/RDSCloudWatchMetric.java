@@ -17,12 +17,12 @@ import io.codearcs.candlestack.nagios.object.services.Service;
 
 public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
-	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-rds-cpu", "check-aws-rds-cpu-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false ),
-	DatabaseConnections( CloudWatchStatistic.Maximum, "check-db-connections", "check-aws-rds-db-connections", "check-aws-rds-db-connections-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false ),
-	FreeStorageSpace( CloudWatchStatistic.Minimum, "check-free-storage", "check-aws-rds-free-storage", "check-aws-rds-free-storage-via-es.sh", new HashSet<>( Arrays.asList( RDSType.MARIADB ) ), false ),
-	VolumeBytesUsed( CloudWatchStatistic.Maximum, "check-storage-used", "check-aws-rds-storage-used", "check-aws-rds-storage-used-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false ),
-	AuroraReplicaLag( CloudWatchStatistic.Maximum, "check-replica-lag", "check-aws-rds-replica-lag", "check-aws-rds-replica-lag-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), true ),
-	ActiveTransactions( CloudWatchStatistic.Maximum, "check-active-transactions", "check-aws-rds-active-transactions", "check-aws-rds-active-transactions-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false );
+	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-rds-cpu", "check-aws-rds-cpu-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false, false ),
+	DatabaseConnections( CloudWatchStatistic.Maximum, "check-db-connections", "check-aws-rds-db-connections", "check-aws-rds-db-connections-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ), false, false ),
+	FreeStorageSpace( CloudWatchStatistic.Minimum, "check-free-storage", "check-aws-rds-free-storage", "check-aws-rds-free-storage-via-es.sh", new HashSet<>( Arrays.asList( RDSType.MARIADB ) ), false, false ),
+	VolumeBytesUsed( CloudWatchStatistic.Maximum, "check-storage-used", "check-aws-rds-storage-used", "check-aws-rds-storage-used-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false, true ),
+	AuroraReplicaLag( CloudWatchStatistic.Maximum, "check-replica-lag", "check-aws-rds-replica-lag", "check-aws-rds-replica-lag-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), true, false ),
+	ActiveTransactions( CloudWatchStatistic.Maximum, "check-active-transactions", "check-aws-rds-active-transactions", "check-aws-rds-active-transactions-via-es.sh", new HashSet<>( Arrays.asList( RDSType.AURORA ) ), false, false );
 
 	private static final String NAMESPACE = "AWS/RDS",
 			DIMENSION_KEY = "DBInstanceIdentifier";
@@ -33,16 +33,17 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 	private Set<RDSType> supportedRDSTypes;
 
-	private boolean replicaOnly;
+	private boolean replicaOnly, clusterOnly;
 
 
-	private RDSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, Set<RDSType> supportedRDSTypes, boolean replicaOnly ) {
+	private RDSCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, Set<RDSType> supportedRDSTypes, boolean replicaOnly, boolean clusterOnly ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
 		this.scriptFileName = scriptFileName;
 		this.supportedRDSTypes = supportedRDSTypes;
 		this.replicaOnly = replicaOnly;
+		this.clusterOnly = clusterOnly;
 
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
@@ -84,6 +85,11 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 	public boolean isReplicaOnlyMetric() {
 		return replicaOnly;
+	}
+
+
+	public boolean isClusterOnlyMetric() {
+		return clusterOnly;
 	}
 
 

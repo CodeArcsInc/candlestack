@@ -69,7 +69,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	private static final String EB_ENVIRONMENT_NAME_PREFIX = "aws.eb.environment.name.prefix",
 			EB_ENVIRONMENT_NAME_REGEX = "aws.eb.environment.name.regex",
 			EB_METRICS_FETCHER_SLEEP = "aws.eb.metrics.fetcher.sleep.min",
-			EB_CLOUDWATCH_METRICS = "aws.eb.cloudwatch.metrics",
+			EB_CLOUDWATCH_METRICS_MONITOR = "aws.eb.cloudwatch.metrics.monitor",
+			EB_CLOUDWATCH_METRICS_FETCH = "aws.eb.cloudwatch.metrics.fetch",
 			EB_ENABLED = "aws.eb.enabled";
 
 
@@ -97,14 +98,27 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<EBCloudWatchMetric> getEBCloudwatchMetrics() throws CandlestackPropertiesException {
+	public static Set<EBCloudWatchMetric> getEBCloudwatchMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<EBCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( EB_CLOUDWATCH_METRICS, true ) ) {
+			for ( String metric : getSetProperty( EB_CLOUDWATCH_METRICS_MONITOR, true ) ) {
 				cloudWatchMetrics.add( EBCloudWatchMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EB_CLOUDWATCH_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EB_CLOUDWATCH_METRICS_MONITOR + "]" );
+		}
+		return cloudWatchMetrics;
+	}
+
+
+	public static Set<EBCloudWatchMetric> getEBCloudwatchMetricsToFetch() throws CandlestackPropertiesException {
+		Set<EBCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( EB_CLOUDWATCH_METRICS_FETCH, true ) ) {
+				cloudWatchMetrics.add( EBCloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EB_CLOUDWATCH_METRICS_FETCH + "]" );
 		}
 		return cloudWatchMetrics;
 	}
@@ -124,10 +138,9 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 * Properties related to EC2
 	 * ---------------------------------------
 	 */
-	private static final String EC2_METRICS_FETCHER_SLEEP = "aws.ec2.metrics.fetcher.sleep.min",
-			EC2_GRAPHITE_METRICS = "aws.ec2.graphite.metrics",
-			EC2_CLOUDWATCH_METRICS = "aws.ec2.cloudwatch.metrics",
-			EC2_ENABLED = "aws.ec2.enabled";
+	private static final String EC2_GRAPHITE_METRICS_MONITOR = "aws.ec2.graphite.metrics.monitor",
+			EC2_CLOUDWATCH_METRICS_MONITOR = "aws.ec2.cloudwatch.metrics.monitor",
+			EC2_CLOUDWATCH_METRICS_FETCH = "aws.ec2.cloudwatch.metrics.fetch";
 
 
 	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
@@ -136,27 +149,40 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.";
 
 
-	public static Set<EC2GraphiteMetric> getEC2GraphiteMetrics() throws CandlestackPropertiesException {
+	public static Set<EC2GraphiteMetric> getEC2GraphiteMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<EC2GraphiteMetric> graphiteMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( EC2_GRAPHITE_METRICS, true ) ) {
+			for ( String metric : getSetProperty( EC2_GRAPHITE_METRICS_MONITOR, true ) ) {
 				graphiteMetrics.add( EC2GraphiteMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_GRAPHITE_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_GRAPHITE_METRICS_MONITOR + "]" );
 		}
 		return graphiteMetrics;
 	}
 
 
-	public static Set<EC2CloudWatchMetric> getEC2CloudwatchMetrics() throws CandlestackPropertiesException {
+	public static Set<EC2CloudWatchMetric> getEC2CloudwatchMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<EC2CloudWatchMetric> cloudWatchMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( EC2_CLOUDWATCH_METRICS, true ) ) {
+			for ( String metric : getSetProperty( EC2_CLOUDWATCH_METRICS_MONITOR, true ) ) {
 				cloudWatchMetrics.add( EC2CloudWatchMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_CLOUDWATCH_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_CLOUDWATCH_METRICS_MONITOR + "]" );
+		}
+		return cloudWatchMetrics;
+	}
+
+
+	public static Set<EC2CloudWatchMetric> getEC2CloudwatchMetricsToFetch() throws CandlestackPropertiesException {
+		Set<EC2CloudWatchMetric> cloudWatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( EC2_CLOUDWATCH_METRICS_FETCH, true ) ) {
+				cloudWatchMetrics.add( EC2CloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_CLOUDWATCH_METRICS_FETCH + "]" );
 		}
 		return cloudWatchMetrics;
 	}
@@ -191,8 +217,10 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			SQS_QUEUE_NAME_REGEX = "aws.sqs.queue.name.regex",
 			SQS_MONITOR_DEAD_LETTER = "aws.sqs.monitor.deadletter",
 			SQS_METRICS_FETCHER_SLEEP = "aws.sqs.metrics.fetcher.sleep.min",
-			SQS_QUEUE_ATTRIBUTES = "aws.sqs.queue.attributes",
-			SQS_CLOUDWATCH_METRICS = "aws.sqs.cloudwatch.metrics",
+			SQS_QUEUE_ATTRIBUTES_MONITOR = "aws.sqs.queue.attributes.monitor",
+			SQS_QUEUE_ATTRIBUTES_FETCH = "aws.sqs.queue.attributes.fetch",
+			SQS_CLOUDWATCH_METRICS_MONITOR = "aws.sqs.cloudwatch.metrics.monitor",
+			SQS_CLOUDWATCH_METRICS_FETCH = "aws.sqs.cloudwatch.metrics.fetch",
 			SQS_ENABLED = "aws.sqs.enabled";
 
 
@@ -227,27 +255,53 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<SQSQueueAttribute> getSQSQueueAttributes() throws CandlestackPropertiesException {
+	public static Set<SQSQueueAttribute> getSQSQueueAttributesToMonitor() throws CandlestackPropertiesException {
 		Set<SQSQueueAttribute> queueAttributes = new HashSet<>();
 		try {
-			for ( String attribute : getSetProperty( SQS_QUEUE_ATTRIBUTES, true ) ) {
+			for ( String attribute : getSetProperty( SQS_QUEUE_ATTRIBUTES_MONITOR, true ) ) {
 				queueAttributes.add( SQSQueueAttribute.valueOf( attribute ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_QUEUE_ATTRIBUTES + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_QUEUE_ATTRIBUTES_MONITOR + "]" );
 		}
 		return queueAttributes;
 	}
 
 
-	public static Set<SQSCloudWatchMetric> getSQSCloudwatchMetrics() throws CandlestackPropertiesException {
+	public static Set<SQSQueueAttribute> getSQSQueueAttributesToFetch() throws CandlestackPropertiesException {
+		Set<SQSQueueAttribute> queueAttributes = new HashSet<>();
+		try {
+			for ( String attribute : getSetProperty( SQS_QUEUE_ATTRIBUTES_FETCH, true ) ) {
+				queueAttributes.add( SQSQueueAttribute.valueOf( attribute ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_QUEUE_ATTRIBUTES_FETCH + "]" );
+		}
+		return queueAttributes;
+	}
+
+
+	public static Set<SQSCloudWatchMetric> getSQSCloudwatchMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<SQSCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( SQS_CLOUDWATCH_METRICS, true ) ) {
+			for ( String metric : getSetProperty( SQS_CLOUDWATCH_METRICS_MONITOR, true ) ) {
 				cloudWatchMetrics.add( SQSCloudWatchMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_CLOUDWATCH_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_CLOUDWATCH_METRICS_MONITOR + "]" );
+		}
+		return cloudWatchMetrics;
+	}
+
+
+	public static Set<SQSCloudWatchMetric> getSQSCloudwatchMetricsToFetch() throws CandlestackPropertiesException {
+		Set<SQSCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( SQS_CLOUDWATCH_METRICS_FETCH, true ) ) {
+				cloudWatchMetrics.add( SQSCloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + SQS_CLOUDWATCH_METRICS_FETCH + "]" );
 		}
 		return cloudWatchMetrics;
 	}
@@ -282,7 +336,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	private static final String RDS_DBINSTANCE_PREFIX = "aws.rds.dbinstance.prefix",
 			RDS_DBINSTANCE_REGEX = "aws.rds.dbinstance.regex",
 			RDS_METRICS_FETCHER_SLEEP = "aws.rds.metrics.fetcher.sleep.min",
-			RDS_CLOUDWATCH_METRICS = "aws.rds.cloudwatch.metrics",
+			RDS_CLOUDWATCH_METRICS_MONITOR = "aws.rds.cloudwatch.metrics.monitor",
+			RDS_CLOUDWATCH_METRICS_FETCH = "aws.rds.cloudwatch.metrics.fetch",
 			RDS_ENABLED = "aws.rds.enabled";
 
 
@@ -310,14 +365,27 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<RDSCloudWatchMetric> getRDSCloudwatchMetrics() throws CandlestackPropertiesException {
+	public static Set<RDSCloudWatchMetric> getRDSCloudwatchMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<RDSCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( RDS_CLOUDWATCH_METRICS, true ) ) {
+			for ( String metric : getSetProperty( RDS_CLOUDWATCH_METRICS_MONITOR, true ) ) {
 				cloudWatchMetrics.add( RDSCloudWatchMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + RDS_CLOUDWATCH_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + RDS_CLOUDWATCH_METRICS_MONITOR + "]" );
+		}
+		return cloudWatchMetrics;
+	}
+
+
+	public static Set<RDSCloudWatchMetric> getRDSCloudwatchMetricsToFetch() throws CandlestackPropertiesException {
+		Set<RDSCloudWatchMetric> cloudWatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( RDS_CLOUDWATCH_METRICS_FETCH, true ) ) {
+				cloudWatchMetrics.add( RDSCloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + RDS_CLOUDWATCH_METRICS_FETCH + "]" );
 		}
 		return cloudWatchMetrics;
 	}
@@ -341,7 +409,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	private static final String S3_LOCATIONS = "aws.s3.locations",
 			S3_METRICS_FETCHER_SLEEP = "aws.s3.metrics.fetcher.sleep.min",
-			S3_METADATA_METRICS = "aws.s3.metadata.metrics",
+			S3_METADATA_METRICS_MONITOR = "aws.s3.metadata.metrics.monitor",
+			S3_METADATA_METRICS_FETCH = "aws.s3.metadata.metrics.fetch",
 			S3_ENABLED = "aws.s3.enabled";
 
 
@@ -364,14 +433,27 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<S3MetadataMetric> getS3MetadataMetrics() throws CandlestackPropertiesException {
+	public static Set<S3MetadataMetric> getS3MetadataMetricsToMonitor() throws CandlestackPropertiesException {
 		Set<S3MetadataMetric> metadataMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( S3_METADATA_METRICS, true ) ) {
+			for ( String metric : getSetProperty( S3_METADATA_METRICS_MONITOR, true ) ) {
 				metadataMetrics.add( S3MetadataMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + S3_METADATA_METRICS + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + S3_METADATA_METRICS_MONITOR + "]" );
+		}
+		return metadataMetrics;
+	}
+
+
+	public static Set<S3MetadataMetric> getS3MetadataMetricsToFetch() throws CandlestackPropertiesException {
+		Set<S3MetadataMetric> metadataMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( S3_METADATA_METRICS_FETCH, true ) ) {
+				metadataMetrics.add( S3MetadataMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + S3_METADATA_METRICS_FETCH + "]" );
 		}
 		return metadataMetrics;
 	}

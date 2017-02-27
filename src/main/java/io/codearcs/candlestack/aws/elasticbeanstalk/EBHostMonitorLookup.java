@@ -55,11 +55,9 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
 		environmentNameRegex = GlobalAWSProperties.getEBEnvrionmentNameRegex();
 
-		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetrics();
-
-		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetrics();
-
-		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
+		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToMonitor();
+		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetricsToMonitor();
+		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetricsToMonitor();
 
 		String region = GlobalAWSProperties.getRegion();
 		beanstalkClient = AWSElasticBeanstalkClientBuilder.standard().withRegion( region ).build();
@@ -139,11 +137,16 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			HostGroup hostGroup = new HostGroup( environment.getEnvironmentName(), environment.getDescription() );
 			hostGroups.add( hostGroup );
 
+			// Add the host for the environment
+			Host host = new Host( environment.getEnvironmentName(), environment.getDescription(), environment.getEndpointURL(), contactGroups );
+			for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
+				host.addService( metric.getService( environment.getEnvironmentName(), contactGroups ) );
+			}
+			hostGroup.addHost( host );
+
 			// Add the associated hosts
 			List<Instance> instances = environmentInstanceMap.get( environment.getEnvironmentName() );
-			if ( instances == null ) {
-				// TODO how do we handle environments that have no hosts?
-			} else {
+			if ( instances != null ) {
 				for ( Instance instance : instances ) {
 					hostGroup.addHost( createHostFromInstance( instance ) );
 				}
@@ -167,10 +170,6 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 		}
 
 		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
-			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
-		}
-
-		for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
 			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
 		}
 

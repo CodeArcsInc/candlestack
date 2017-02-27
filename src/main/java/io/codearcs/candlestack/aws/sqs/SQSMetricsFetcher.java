@@ -44,9 +44,9 @@ public class SQSMetricsFetcher extends MetricsFetcher {
 
 		monitorDeadLetter = GlobalAWSProperties.isSQSMonitorDeadLetterEnabled();
 
-		queueAttributes = GlobalAWSProperties.getSQSQueueAttributes().stream().map( attribute -> attribute.name() ).collect( Collectors.toList() );
+		queueAttributes = GlobalAWSProperties.getSQSQueueAttributesToFetch().stream().map( attribute -> attribute.name() ).collect( Collectors.toList() );
 
-		cloudWatchMetrics = GlobalAWSProperties.getSQSCloudwatchMetrics();
+		cloudWatchMetrics = GlobalAWSProperties.getSQSCloudwatchMetricsToFetch();
 
 		sqsClient = AmazonSQSClientBuilder.standard().withRegion( GlobalAWSProperties.getRegion() ).build();
 

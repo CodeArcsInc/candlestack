@@ -45,9 +45,8 @@ public class EBMetricsFetcher extends MetricsFetcher {
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
 		environmentNameRegex = GlobalAWSProperties.getEBEnvrionmentNameRegex();
 
-		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetrics();
-
-		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetrics();
+		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToFetch();
+		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetricsToFetch();
 
 		String region = GlobalAWSProperties.getRegion();
 		beanstalkClient = AWSElasticBeanstalkClientBuilder.standard().withRegion( region ).build();
