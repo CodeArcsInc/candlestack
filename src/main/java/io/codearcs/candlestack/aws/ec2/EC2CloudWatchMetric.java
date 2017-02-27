@@ -15,17 +15,21 @@ import io.codearcs.candlestack.nagios.object.services.Service;
 
 public enum EC2CloudWatchMetric implements CloudWatchMetric {
 
-	CPUUtilization( CloudWatchStatistic.Average, "check-cpu", "check-aws-ec2-cpu", "check-aws-ec2-cpu-via-es.sh" );
+	CPUUtilization( CloudWatchStatistic.Average,
+			"check-cpu",
+			"check-aws-ec2-cpu",
+			"check-aws-ec2-cpu-via-es.sh",
+			"Checks to see if the EC2 instance is experiencing heavy CPU load. In the event an alert is triggered check the EC2 instance for processing consuming large amount of CPU or potentially a noisy neighbor stealing resources." );
 
 	private static final String NAMESPACE = "AWS/EC2",
 			DIMENSION_KEY = "InstanceId";
 
-	private String serviceName, commandName, scriptFileName, logsHost, logsAuthToken;
+	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;
 
 
-	private EC2CloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName ) {
+	private EC2CloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, String notes ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
@@ -72,7 +76,7 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command, contactGroups );
+		return new Service( serviceName, instanceId, command, notes, contactGroups );
 
 	}
 

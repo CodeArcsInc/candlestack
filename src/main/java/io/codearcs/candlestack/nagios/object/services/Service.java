@@ -17,7 +17,7 @@ import io.codearcs.candlestack.nagios.object.timeperiod.TimePeriod;
  */
 public class Service implements NagiosObject {
 
-	private final String hostName, description, checkCommand;
+	private final String hostName, description, checkCommand, notes;
 
 	private final Set<String> contactGroups;
 
@@ -28,11 +28,12 @@ public class Service implements NagiosObject {
 	private boolean notificationsEnabled;
 
 
-	public Service( String description, String hostName, String checkCommand, Set<String> contactGroups ) {
+	public Service( String description, String hostName, String checkCommand, String notes, Set<String> contactGroups ) {
 
 		this.description = description;
 		this.hostName = hostName;
 		this.checkCommand = checkCommand;
+		this.notes = notes;
 		this.contactGroups = Collections.unmodifiableSet( new HashSet<>( contactGroups ) );
 
 		maxCheckAttempts = 3;
@@ -59,6 +60,11 @@ public class Service implements NagiosObject {
 
 	public String getCheckCommand() {
 		return checkCommand;
+	}
+
+
+	public String getNotes() {
+		return notes;
 	}
 
 
@@ -112,6 +118,10 @@ public class Service implements NagiosObject {
 
 		sb.append( "\tservice_description\t" );
 		sb.append( description );
+		sb.append( "\n" );
+
+		sb.append( "\tnotes\t" );
+		sb.append( notes );
 		sb.append( "\n" );
 
 		sb.append( "\tcheck_command\t" );
