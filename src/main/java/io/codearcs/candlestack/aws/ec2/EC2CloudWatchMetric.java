@@ -19,7 +19,19 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 			"check-cpu",
 			"check-aws-ec2-cpu",
 			"check-aws-ec2-cpu-via-es.sh",
-			"Checks to see if the EC2 instance is experiencing heavy CPU load. In the event an alert is triggered check the EC2 instance for processing consuming large amount of CPU or potentially a noisy neighbor stealing resources." );
+			"Checks to see if the EC2 instance is experiencing heavy CPU load. In the event an alert is triggered check the EC2 instance for processing consuming large amount of CPU or potentially a noisy neighbor stealing resources." ),
+
+	NetworkIn( CloudWatchStatistic.Maximum,
+			"check-network-in",
+			"check-aws-ec2-network-in",
+			"check-aws-ec2-network-in-via-es.sh",
+			"Checks to see if the EC2 instance has network traffice flowing into the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent other systems from connecting." ),
+
+	NetworkOut( CloudWatchStatistic.Maximum,
+			"check-network-out",
+			"check-aws-ec2-network-out",
+			"check-aws-ec2-network-out-via-es.sh",
+			"Checks to see if the EC2 instance has network traffice flowing out of the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent it from sending out data." );
 
 	private static final String NAMESPACE = "AWS/EC2",
 			DIMENSION_KEY = "InstanceId";

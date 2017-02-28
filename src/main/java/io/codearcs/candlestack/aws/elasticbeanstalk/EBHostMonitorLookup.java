@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.Instance;
@@ -30,8 +27,6 @@ import io.codearcs.candlestack.nagios.object.hosts.HostGroup;
 
 
 public class EBHostMonitorLookup implements HostMonitorLookup {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger( EBHostMonitorLookup.class );
 
 	private AWSElasticBeanstalk beanstalkClient;
 
@@ -129,7 +124,6 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 			// Skip over ineligible environments
 			if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix, environmentNameRegex ) ) {
-				LOGGER.info( "EBHostMonitorLookup determined environment [" + environment + "] is not eligible" );
 				continue;
 			}
 

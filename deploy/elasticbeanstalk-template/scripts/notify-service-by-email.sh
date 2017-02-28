@@ -42,7 +42,10 @@ EOF
 )
 
 FROM="$TODO_FROM_EMAIL_ADDRESS"
-SUBJECT="[$NOTIFICATIONTYPE] $HOSTGROUPNAME/$HOSTNAME/$SERVICEDESC"
+if [ "$NOTIFICATIONTYPE" == "RECOVERY" ] 
+then
+else
+fi
 
 aws --region eu-west-1 ses send-email \
 	--from "$FROM" \

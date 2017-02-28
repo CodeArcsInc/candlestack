@@ -44,9 +44,9 @@ public class SQSHostMonitorLookup implements HostMonitorLookup {
 
 		monitorDeadLetter = GlobalAWSProperties.isSQSMonitorDeadLetterEnabled();
 
-		cloudWatchMetrics = GlobalAWSProperties.getSQSCloudwatchMetricsToFetch();
+		cloudWatchMetrics = GlobalAWSProperties.getSQSCloudwatchMetricsToMonitor();
 
-		queueAttributes = GlobalAWSProperties.getSQSQueueAttributesToFetch();
+		queueAttributes = GlobalAWSProperties.getSQSQueueAttributesToMonitor();
 
 		sqsClient = AmazonSQSClientBuilder.standard().withRegion( GlobalAWSProperties.getRegion() ).build();
 

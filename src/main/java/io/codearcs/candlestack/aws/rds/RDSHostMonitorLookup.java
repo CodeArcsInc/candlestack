@@ -1,15 +1,10 @@
 package io.codearcs.candlestack.aws.rds;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import com.amazonaws.services.rds.AmazonRDS;
@@ -22,7 +17,6 @@ import com.amazonaws.services.rds.model.DescribeDBInstancesResult;
 
 import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.CandlestackPropertiesException;
-import io.codearcs.candlestack.GlobalCandlestackProperties;
 import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
@@ -181,40 +175,4 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 	}
 
-
-	public static void main( String[] args ) {
-
-		File propsFile = new File( "/var/dev-candlestack.ini" );
-		if ( !propsFile.exists() ) {
-			System.out.println( "Provided ini file location doesn't exist [" + args[0] + "]" );
-			System.exit( -1 );
-		}
-
-		Properties props = new Properties();
-		try {
-			props.load( new FileInputStream( propsFile ) );
-		} catch ( IOException e ) {
-			System.out.println( "Encountered an error attempting to load properties file [" + propsFile.getAbsolutePath() + "]" );
-			e.printStackTrace();
-			System.exit( -1 );
-		}
-
-		try {
-
-			// Initialize the global properties
-			GlobalCandlestackProperties.init( props );
-
-			RDSHostMonitorLookup lookup = new RDSHostMonitorLookup( new HashSet<>() );
-			lookup.lookupHostsToMonitor();
-
-
-		} catch ( CandlestackException e ) {
-			System.out.println( "Encountered an error trying to start up Candlestack processes" );
-			e.printStackTrace();
-		} catch ( Throwable t ) {
-			System.out.println( "Encountered an unexpected error trying to start up Candlestack processes" );
-			t.printStackTrace();
-		}
-
-	}
 }

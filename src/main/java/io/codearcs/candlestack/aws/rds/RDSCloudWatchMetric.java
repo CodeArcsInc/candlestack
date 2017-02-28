@@ -44,7 +44,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			false,
 			false ),
 
-	VolumeBytesUsed( CloudWatchStatistic.Maximum,
+	VolumeBytesUsed( CloudWatchStatistic.Average,
 			"check-storage-used",
 			"check-aws-rds-storage-used",
 			"check-aws-rds-storage-used-via-es.sh",
@@ -73,7 +73,8 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 
 	private static final String NAMESPACE = "AWS/RDS",
-			DIMENSION_KEY = "DBInstanceIdentifier";
+			INSTANCE_DIMENSION_KEY = "DBInstanceIdentifier",
+			CLUSTER_DIMENSION_KEY = "DbClusterIdentifier";
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
@@ -169,7 +170,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Dimension getDimension( String dimensionValue ) {
-		return new Dimension().withName( DIMENSION_KEY ).withValue( dimensionValue );
+		return new Dimension().withName( clusterOnly ? CLUSTER_DIMENSION_KEY : INSTANCE_DIMENSION_KEY ).withValue( dimensionValue );
 	}
 
 

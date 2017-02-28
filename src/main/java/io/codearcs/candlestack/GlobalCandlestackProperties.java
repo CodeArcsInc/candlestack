@@ -214,9 +214,11 @@ public class GlobalCandlestackProperties {
 		String optionsStr = getStringProperty( propertyKey, null ).trim();
 		if ( !allowEmpty && optionsStr.isEmpty() ) {
 			throw new CandlestackPropertiesException( "GlobalCandlestackProperties was unable to locate non-empty string property for property key [" + propertyKey + "]" );
+		} else if ( optionsStr.isEmpty() ) {
+			return new HashSet<>();
+		} else {
+			return new HashSet<>( Arrays.asList( optionsStr.split( "," ) ) );
 		}
-
-		return new HashSet<>( Arrays.asList( optionsStr.split( "," ) ) );
 	}
 
 }

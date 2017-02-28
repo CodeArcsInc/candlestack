@@ -19,7 +19,19 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 			"check-queue-message-age",
 			"check-aws-sqs-queue-message-age",
 			"check-aws-sqs-queue-message-age-via-es.sh",
-			"Checks to see if the queue has pending messages that have been sitting on the queue for long period of time. In the event an alert is triggered ensure messages on the queue are being consumed and the relevant message consumers are healthy." );
+			"Checks to see if the queue has pending messages that have been sitting on the queue for long period of time. In the event an alert is triggered ensure messages on the queue are being consumed and the relevant message consumers are healthy." ),
+
+	NumberOfMessagesReceived( CloudWatchStatistic.Maximum,
+			"check-queue-messages-received",
+			"check-aws-sqs-queue-messages-received",
+			"check-aws-sqs-queue-messages-received-via-es.sh",
+			"Checks to see if the queue has messages that have been recently consumed. In the event an alert is triggered ensure messages on the queue are being consumed and the relevant message consumers are healthy." ),
+
+	NumberOfMessagesSent( CloudWatchStatistic.Maximum,
+			"check-queue-messages-sent",
+			"check-aws-sqs-queue-messages-sent",
+			"check-aws-sqs-queue-messages-sent-via-es.sh",
+			"Checks to see if the queue has messages that have been recently produced. In the event an alert is triggered ensure messages are being put on the queue and the relevant message producers are healthy." );
 
 
 	private static final String NAMESPACE = "AWS/SQS",

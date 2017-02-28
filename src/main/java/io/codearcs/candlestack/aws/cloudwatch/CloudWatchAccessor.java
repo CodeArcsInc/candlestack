@@ -9,6 +9,7 @@ import java.util.Map;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
+import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 
@@ -16,6 +17,7 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CandlestackAWSException;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
+import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 
 
 public class CloudWatchAccessor {
@@ -124,15 +126,26 @@ public class CloudWatchAccessor {
 
 		}
 
-		return new GetMetricStatisticsRequest()
-				.withStartTime( startDate )
-				.withEndTime( endDate )
-				.withPeriod( requestPeriod )
-				.withNamespace( metric.getNamespace() )
-				.withStatistics( metric.getStatistic().name() )
-				.withDimensions( metric.getDimension( dimensionValue ) )
-				.withMetricName( metric.getName() );
-
+		// TODO this totally a hack to get this one metric to work since it requires the EngineName dimension to work, need to figure out a more long term solution
+		if ( metric instanceof RDSCloudWatchMetric && metric.equals( RDSCloudWatchMetric.VolumeBytesUsed ) ) {
+			return new GetMetricStatisticsRequest()
+					.withStartTime( startDate )
+					.withEndTime( endDate )
+					.withPeriod( requestPeriod )
+					.withNamespace( metric.getNamespace() )
+					.withStatistics( metric.getStatistic().name() )
+					.withDimensions( metric.getDimension( dimensionValue ), new Dimension().withName( "EngineName" ).withValue( "aurora" ) )
+					.withMetricName( metric.getName() );
+		} else {
+			return new GetMetricStatisticsRequest()
+					.withStartTime( startDate )
+					.withEndTime( endDate )
+					.withPeriod( requestPeriod )
+					.withNamespace( metric.getNamespace() )
+					.withStatistics( metric.getStatistic().name() )
+					.withDimensions( metric.getDimension( dimensionValue ) )
+					.withMetricName( metric.getName() );
+		}
 	}
 
 

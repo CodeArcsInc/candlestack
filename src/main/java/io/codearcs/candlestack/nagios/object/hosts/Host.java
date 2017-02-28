@@ -34,8 +34,19 @@ public class Host implements NagiosObject {
 
 	public Host( String name, String alias, String address, Set<String> contactGroups ) {
 		this.name = name;
-		this.alias = alias;
-		this.address = address;
+
+		if ( alias == null ) {
+			this.alias = "";
+		} else {
+			this.alias = alias;
+		}
+
+		if ( address == null ) {
+			this.address = "";
+		} else {
+			this.address = address;
+		}
+
 		this.contactGroups = Collections.unmodifiableSet( new HashSet<>( contactGroups ) );
 
 		// TODO this things need customization options
