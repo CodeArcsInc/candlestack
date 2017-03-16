@@ -11,8 +11,9 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.elasticbeanstalk.model.EnvironmentDescription;
+
+import io.codearcs.candlestack.aws.ec2.EC2Util;
 
 
 public class EBUtil {
@@ -62,7 +63,7 @@ public class EBUtil {
 					continue;
 				}
 
-				String environmentName = getTagValue( instance, "elasticbeanstalk:environment-name" );
+				String environmentName = EC2Util.getTagValue( instance, "elasticbeanstalk:environment-name" );
 				if ( EBUtil.isEnvironmentEligible( environmentName, environmentNamePrefix, environmentNameRegex ) ) {
 
 					List<Instance> instances = environmentInstanceMap.get( environmentName );
@@ -81,18 +82,6 @@ public class EBUtil {
 
 		return environmentInstanceMap;
 
-	}
-
-
-	public static String getTagValue( Instance instance, String tagKey ) {
-		String tagValue = "";
-		for ( Tag tag : instance.getTags() ) {
-			if ( tag.getKey().equals( tagKey ) ) {
-				tagValue = tag.getValue();
-				break;
-			}
-		}
-		return tagValue;
 	}
 
 }

@@ -138,15 +138,39 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 * Properties related to EC2
 	 * ---------------------------------------
 	 */
-	private static final String EC2_GRAPHITE_METRICS_MONITOR = "aws.ec2.graphite.metrics.monitor",
+	private static final String EC2_NAME_PREFIX = "aws.ec2.name.prefix",
+			EC2_NAME_REGEX = "aws.ec2.name.regex",
+			EC2_METRICS_FETCHER_SLEEP = "aws.ec2.metrics.fetcher.sleep.min",
+			EC2_GRAPHITE_METRICS_MONITOR = "aws.ec2.graphite.metrics.monitor",
 			EC2_CLOUDWATCH_METRICS_MONITOR = "aws.ec2.cloudwatch.metrics.monitor",
-			EC2_CLOUDWATCH_METRICS_FETCH = "aws.ec2.cloudwatch.metrics.fetch";
+			EC2_CLOUDWATCH_METRICS_FETCH = "aws.ec2.cloudwatch.metrics.fetch",
+			EC2_ENABLED = "aws.ec2.enabled";
 
 
 	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
 			EC2_GRAPHITE_METRIC_CRITICAL_PREFIX = "aws.ec2.graphite.metric.critical.",
 			EC2_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.ec2.cloudwatch.metric.warning.",
 			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.";
+
+
+	public static boolean isEC2Enabled() throws CandlestackPropertiesException {
+		return getBooleanProperty( EC2_ENABLED, false );
+	}
+
+
+	public static String getEC2NamePrefix() throws CandlestackPropertiesException {
+		return getStringProperty( EC2_NAME_PREFIX, "" ).trim();
+	}
+
+
+	public static String getEC2NameRegex() throws CandlestackPropertiesException {
+		return getStringProperty( EC2_NAME_REGEX, "" ).trim();
+	}
+
+
+	public static int getEC2MetricsFetcherSleep() throws CandlestackPropertiesException {
+		return getIntProperty( EC2_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
 
 
 	public static Set<EC2GraphiteMetric> getEC2GraphiteMetricsToMonitor() throws CandlestackPropertiesException {

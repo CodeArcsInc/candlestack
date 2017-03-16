@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
+import io.codearcs.candlestack.aws.ec2.EC2HostMonitorLookup;
+import io.codearcs.candlestack.aws.ec2.EC2MetricsFetcher;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBHostMonitorLookup;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBMetricsFetcher;
 import io.codearcs.candlestack.aws.rds.RDSHostMonitorLookup;
@@ -51,21 +53,32 @@ public class Candlestack {
 		hostMonitorLookups = new ArrayList<>();
 
 		if ( GlobalAWSProperties.isEBEnabled() ) {
+			LOGGER.info( "Candlestack will monitor Elastic Beanstalk" );
 			metricsFetchers.add( new EBMetricsFetcher() );
 			hostMonitorLookups.add( new EBHostMonitorLookup( contactGroups ) );
 		}
 
+		if ( GlobalAWSProperties.isEC2Enabled() ) {
+			LOGGER.info( "Candlestack will monitor EC2" );
+			metricsFetchers.add( new EC2MetricsFetcher() );
+			hostMonitorLookups.add( new EC2HostMonitorLookup( contactGroups ) );
+		}
+
+
 		if ( GlobalAWSProperties.isRDSEnabled() ) {
+			LOGGER.info( "Candlestack will monitor RDS" );
 			metricsFetchers.add( new RDSMetricsFetcher() );
 			hostMonitorLookups.add( new RDSHostMonitorLookup( contactGroups ) );
 		}
 
 		if ( GlobalAWSProperties.isSQSEnabled() ) {
+			LOGGER.info( "Candlestack will monitor SQS" );
 			metricsFetchers.add( new SQSMetricsFetcher() );
 			hostMonitorLookups.add( new SQSHostMonitorLookup( contactGroups ) );
 		}
 
 		if ( GlobalAWSProperties.isS3Enabled() ) {
+			LOGGER.info( "Candlestack will monitor S3" );
 			metricsFetchers.add( new S3MetricsFetcher() );
 			hostMonitorLookups.add( new S3HostMonitorLookup( contactGroups ) );
 		}
