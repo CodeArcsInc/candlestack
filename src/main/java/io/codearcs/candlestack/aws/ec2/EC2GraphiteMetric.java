@@ -59,20 +59,27 @@ public enum EC2GraphiteMetric implements AWSMetric {
 
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
+		return getService( "", instanceId, contactGroups );
+	}
 
+
+	public Service getService( String commanNameSuffix, String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
 		long warning = GlobalAWSProperties.getEC2GraphiteMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getEC2GraphiteMetricCriticalLevel( instanceId, this );
 
 		String command = commandName + "!" + instanceId + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command, notes, contactGroups );
-
+		return new Service( serviceName, instanceId, command + commanNameSuffix, notes, contactGroups );
 	}
 
 
 	@Override
 	public Command getMonitorCommand( String relativePathToMonitorResource ) {
-		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
+		return getMonitorCommand( "", relativePathToMonitorResource );
 	}
 
+
+	public Command getMonitorCommand( String commandNameSuffix, String relativePathToMonitorResource ) {
+		return new Command( commandName + commandNameSuffix, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
+	}
 }

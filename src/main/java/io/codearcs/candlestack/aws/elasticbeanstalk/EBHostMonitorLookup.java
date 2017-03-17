@@ -29,6 +29,8 @@ import io.codearcs.candlestack.nagios.object.hosts.HostGroup;
 
 public class EBHostMonitorLookup implements HostMonitorLookup {
 
+	private static final String EC2_COMMAND_SUFFIX = "-eb";
+
 	private AWSElasticBeanstalk beanstalkClient;
 
 	private AmazonEC2 ec2Client;
@@ -96,11 +98,11 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 		List<Command> commands = new ArrayList<>();
 
 		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
-			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
+			commands.add( metric.getMonitorCommand( EC2_COMMAND_SUFFIX, relativePathToMonitorResource ) );
 		}
 
 		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
-			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
+			commands.add( metric.getMonitorCommand( EC2_COMMAND_SUFFIX, relativePathToMonitorResource ) );
 		}
 
 		for ( EBCloudWatchMetric metric : ebCloudWatchMetrics ) {
@@ -143,7 +145,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			List<Instance> instances = environmentInstanceMap.get( environment.getEnvironmentName() );
 			if ( instances != null ) {
 				for ( Instance instance : instances ) {
-					hostGroup.addHost( EC2Util.createHostFromInstance( instance, contactGroups, ec2CloudWatchMetrics, ec2GraphiteMetrics ) );
+					hostGroup.addHost( createHostFromInstance( instance ) );
 				}
 			}
 
@@ -154,4 +156,21 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 	}
 
 
+	private Host createHostFromInstance( Instance instance ) throws CandlestackPropertiesException {
+
+		// Lookup the alias and create the host object
+		String alias = EC2Util.getTagValue( instance, "Name" );
+		Host host = new Host( instance.getInstanceId(), alias, instance.getPublicIpAddress(), contactGroups );
+
+		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
+			host.addService( metric.getService( EC2_COMMAND_SUFFIX, instance.getInstanceId(), contactGroups ) );
+		}
+
+		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+			host.addService( metric.getService( EC2_COMMAND_SUFFIX, instance.getInstanceId(), contactGroups ) );
+		}
+
+		return host;
+
+	}
 }

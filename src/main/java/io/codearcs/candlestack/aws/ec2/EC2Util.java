@@ -2,7 +2,6 @@ package io.codearcs.candlestack.aws.ec2;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -11,9 +10,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.Tag;
-
-import io.codearcs.candlestack.CandlestackPropertiesException;
-import io.codearcs.candlestack.nagios.object.hosts.Host;
 
 
 public class EC2Util {
@@ -84,25 +80,6 @@ public class EC2Util {
 			}
 		}
 		return tagValue;
-	}
-
-
-	public static Host createHostFromInstance( Instance instance, Set<String> contactGroups, Set<EC2CloudWatchMetric> ec2CloudWatchMetrics, Set<EC2GraphiteMetric> ec2GraphiteMetrics ) throws CandlestackPropertiesException {
-
-		// Lookup the alias and create the host object
-		String alias = EC2Util.getTagValue( instance, "Name" );
-		Host host = new Host( instance.getInstanceId(), alias, instance.getPublicIpAddress(), contactGroups );
-
-		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
-			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
-		}
-
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
-			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
-		}
-
-		return host;
-
 	}
 
 }

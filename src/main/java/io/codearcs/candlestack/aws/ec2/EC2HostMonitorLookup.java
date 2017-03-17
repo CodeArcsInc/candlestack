@@ -17,6 +17,7 @@ import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
+import io.codearcs.candlestack.nagios.object.hosts.Host;
 import io.codearcs.candlestack.nagios.object.hosts.HostGroup;
 
 
@@ -101,10 +102,29 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 		// Lookup the EC2 instances and define the necessary hosts adding them to the host group
 		List<Instance> instances = EC2Util.lookupElligibleInstances( ec2Client, namePrefix, nameRegex );
 		for ( Instance instance : instances ) {
-			hostGroup.addHost( EC2Util.createHostFromInstance( instance, contactGroups, ec2CloudWatchMetrics, ec2GraphiteMetrics ) );
+			hostGroup.addHost( createHostFromInstance( instance ) );
 		}
 
 		return hostGroups;
+
+	}
+
+
+	private Host createHostFromInstance( Instance instance ) throws CandlestackPropertiesException {
+
+		// Lookup the alias and create the host object
+		String alias = EC2Util.getTagValue( instance, "Name" );
+		Host host = new Host( instance.getInstanceId(), alias, instance.getPublicIpAddress(), contactGroups );
+
+		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
+			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
+		}
+
+		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
+		}
+
+		return host;
 
 	}
 

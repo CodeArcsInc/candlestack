@@ -18,9 +18,7 @@ public interface AWSMetric {
 	public String getScriptFileName();
 
 
-	// TODO consider using default methods for these following methods
-
-	public Service getService( String dbInstanceId, Set<String> contactGroups ) throws CandlestackPropertiesException;
+	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException;
 
 
 	public Command getMonitorCommand( String relativePathToMonitorResource );
