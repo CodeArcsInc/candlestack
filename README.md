@@ -1,8 +1,8 @@
-# Overview#
+# Overview
 
 Candlestack is an open source tool for monitoring dynamic infrastructure deployed via AWS. It is capable of automatically detecting infrastructure changes while utilizing a combination of open source tools to collect, visualize, monitor, and alert on various metrics. 
 
-## How does it work?##
+## How does it work?
 
 At the heart of the system sits the Candlestack server which runs the Candlestack Java application and [Nagios core](https://www.nagios.org/projects/nagios-core/). The Candlestack Java application performs two main roles:
 
@@ -15,31 +15,31 @@ Looking beyond the Candlestack server we have an Elasticsearch server or cluster
 
 Beyond that we have the applications themselves which in some cases will be running tools such as the munin-node agent to collect other metric data about the EC2 instance such as disk utilization and free memory.
 
-## AWS Support##
+## AWS Support
 
 AWS offers a large number of services, some of which do not make sense to monitor from a systems perspective. That being said Candlestack currently supports the monitoring of the following AWS services with more services to be supported down the road.
 
-### EC2###
+### EC2
 
 EC2 is the back bone for most dynamic infrastructure in the AWS ecosystem since it provides a variety of on demand hardware for running various applications. Currently Candlestack is able to monitor CPU utilization, network in, and network out for any EC2 instance out of the box thanks to CloudWatch. It is also possible to monitor disk utilization and memory utilization if other services are installed on the EC2 instance such as the munin-node agent.
 
-### Elastic Beanstalk###
+### Elastic Beanstalk
 
 Elastic Beanstalk provides an easy way to deploy applications to AWS EC2 instances along with load balancing and system scaling. Currently Candlestack is able to perform monitoring of the Elastic Beanstalk environment health along with the EC2 instance monitoring mentioned above.
 
-### SQS###
+### SQS
 
 SQS provides a message queueing service that is often used in place of other JMS providers such as ActiveMQ when deploying infrastructure to AWS. Currently Candlestack is able to monitor on a per queue basis the approximate number of messages, approximate age of oldest message, number of messages received, number of messages sent, and last modified.
 
-### RDS###
+### RDS
 
 RDS provides a variety of relational database technologies that can be easily spun up with out you needing to know the intricacies of that databases hardware setup. Since each of the database technologies in RDS have different CloudWatch metrics Candlestack currently only supports MariaDB and AuroraDB databases. For a MariaDB database it is able to monitor CPU utilization, number of database connections, and free storage space. As for an AuroraDB database it is able to monitor CPU utilization, number of database connections, volume bytes used, replica lag, and number of active transactions. 
 
-### S3###
+### S3
 
 S3 provides virtually unlimited storage potential for any files that need to be persisted or accessed via different systems. Since a common use of S3 is to store backups of databases or servers Candlestack currently supports monitoring specific S3 files last modified for staleness.
 
-# Installation#
+# Installation
 
 To help with the installation of the Candlestack server we have provided an example Docker image file and Elastic Beanstalk template. The Docker image file example located [here](https://github.com/CodeArcsInc/candlestack/blob/master/deploy/base-image-dockerfile) includes all of the dependencies needed by the Candlestack server to properly function, which includes:
 
@@ -68,11 +68,11 @@ The Elastic Beanstalk template example located [here](https://github.com/CodeArc
 | $*TODO*_REPOSITORY            | [pom.xml](https://github.com/CodeArcsInc/candlestack/blob/master/deploy/elasticbeanstalk-template/pom.xml) | The maven repository URL to be used when building the deployment |
 | $*TODO*_SSL_CERTIFICATE       | [elb.config](https://github.com/CodeArcsInc/candlestack/blob/master/deploy/elasticbeanstalk-template/.ebextensions/elb.config) | The SSL certificate ARN to be used by Candlestack server |
 
-# Configuration#
+# Configuration
 
 Candlestack has been built to be highly configurable since everyone's infrastructure is different and thus so are their monitoring requirements. 
 
-## Candlestack Java Application##
+## Candlestack Java Application
 
 Outlined below you will find all of the configuration properties for the Java application explained and a sample configuration file has been provided [here](https://github.com/CodeArcsInc/candlestack/blob/master/deploy/elasticbeanstalk-template/candlestack/candlestack-sample.ini) to get you started. 
 
@@ -215,11 +215,11 @@ Outlined below you will find all of the configuration properties for the Java ap
 | aws.s3.metadata.metric.warning.***locationid***.LastModified |          |         |             |
 | aws.s3.metadata.metric.critical.***locationid***.LastModified |          |         |             |
 
-## Nagios Check Scripts##
+## Nagios Check Scripts
 
 Depending on the metrics you have enabled for monitoring via the Candlestack Java application configuration you will need to provide a corresponding Nagios check script. Example check scripts can be found [here](https://github.com/CodeArcsInc/candlestack/tree/master/deploy/elasticbeanstalk-template/scripts) and in most cases can be used by your application with very little to no modifications. Below you will find a table that outlines the parameters a check script will always receive and another table that maps the monitor metric to script file name.
 
-### Check Script Properties###
+### Check Script Properties
 
 | Order Number | Property Name | Description                              |
 | ------------ | ------------- | ---------------------------------------- |
@@ -229,7 +229,7 @@ Depending on the metrics you have enabled for monitoring via the Candlestack Jav
 | 4            | warning       | The value that has been provided as the warning level for metric checks |
 | 5            | critical      | The value that has been provided as the critical level for metric checks |
 
-### Monitor Metric to Check Script Mapping###
+### Monitor Metric to Check Script Mapping
 
 | Monitor Metric                       | Related Java Application Configuration(s) | Check Script File Name                   |
 | ------------------------------------ | ---------------------------------------- | ---------------------------------------- |
