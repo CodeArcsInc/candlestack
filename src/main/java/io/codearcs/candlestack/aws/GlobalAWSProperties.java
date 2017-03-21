@@ -124,13 +124,13 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static long getEBCloudWatchMetricWarningLevel( String queueName, EBCloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EB_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	public static long getEBCloudWatchMetricWarningLevel( String environmentName, EBCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EB_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), environmentName );
 	}
 
 
-	public static long getEBCloudWatchMetricCriticalLevel( String queueName, EBCloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EB_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	public static long getEBCloudWatchMetricCriticalLevel( String environmentName, EBCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EB_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), environmentName );
 	}
 
 	/*
@@ -212,23 +212,23 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static long getEC2GraphiteMetricWarningLevel( String queueName, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_GRAPHITE_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	public static long getEC2GraphiteMetricWarningLevel( String instanceId, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_GRAPHITE_METRIC_WARNING_PREFIX, metric.name(), instanceId );
 	}
 
 
-	public static long getEC2GraphiteMetricCriticalLevel( String queueName, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_GRAPHITE_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	public static long getEC2GraphiteMetricCriticalLevel( String instanceId, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_GRAPHITE_METRIC_CRITICAL_PREFIX, metric.name(), instanceId );
 	}
 
 
-	public static long getEC2CloudWatchMetricWarningLevel( String queueName, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	public static long getEC2CloudWatchMetricWarningLevel( String instanceId, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), instanceId );
 	}
 
 
-	public static long getEC2CloudWatchMetricCriticalLevel( String queueName, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	public static long getEC2CloudWatchMetricCriticalLevel( String instanceId, EC2CloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), instanceId );
 	}
 
 	/*
@@ -415,13 +415,13 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static long getRDSCloudWatchMetricWarningLevel( String queueName, RDSCloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( RDS_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	public static long getRDSCloudWatchMetricWarningLevel( String dbInstance, RDSCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( RDS_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), dbInstance );
 	}
 
 
-	public static long getRDSCloudWatchMetricCriticalLevel( String queueName, RDSCloudWatchMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( RDS_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	public static long getRDSCloudWatchMetricCriticalLevel( String dbInstance, RDSCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( RDS_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), dbInstance );
 	}
 
 
@@ -483,13 +483,13 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static long getS3MetadataMetricWarningLevel( String queueName, S3MetadataMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( S3_METADATA_METRIC_WARNING_PREFIX, metric.name(), queueName );
+	public static long getS3MetadataMetricWarningLevel( String locationId, S3MetadataMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( S3_METADATA_METRIC_WARNING_PREFIX, metric.name(), locationId );
 	}
 
 
-	public static long getS3MetadataMetricCriticalLevel( String queueName, S3MetadataMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( S3_METADATA_METRIC_CRITICAL_PREFIX, metric.name(), queueName );
+	public static long getS3MetadataMetricCriticalLevel( String locationId, S3MetadataMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( S3_METADATA_METRIC_CRITICAL_PREFIX, metric.name(), locationId );
 	}
 
 
