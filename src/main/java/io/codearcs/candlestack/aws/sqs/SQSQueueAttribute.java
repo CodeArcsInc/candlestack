@@ -61,14 +61,13 @@ public enum SQSQueueAttribute implements AWSMetric {
 
 	@Override
 	public Service getService( String queueName, Set<String> contactGroups ) throws CandlestackPropertiesException {
-
 		long warning = GlobalAWSProperties.getSQSQueueAttributeWarningLevel( queueName, this );
 		long critical = GlobalAWSProperties.getSQSQueueAttributeCriticalLevel( queueName, this );
-
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( queueName ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, queueName, command, notes, contactGroups );
+		String notificationPeriod = GlobalAWSProperties.getSQSServiceNotificationPeriod( queueName );
 
+		return new Service( serviceName, queueName, command, notes, notificationPeriod, contactGroups );
 	}
 
 

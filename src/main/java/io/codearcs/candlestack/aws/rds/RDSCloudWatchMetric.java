@@ -145,14 +145,12 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Service getService( String dbInstanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-
 		long warning = GlobalAWSProperties.getRDSCloudWatchMetricWarningLevel( dbInstanceId, this );
 		long critical = GlobalAWSProperties.getRDSCloudWatchMetricCriticalLevel( dbInstanceId, this );
-
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( dbInstanceId ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, dbInstanceId, command, notes, contactGroups );
-
+		String notificationPeriod = GlobalAWSProperties.getRDSServiceNotificationPeriod( dbInstanceId );
+		return new Service( serviceName, dbInstanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
 

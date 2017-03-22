@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ public class NagiosUpdater extends Thread {
 	 */
 	private static final String PROPERTY_KEY_SLEEP_INTERVAL = "nagios.updater.sleep.interval.min",
 			PROPERTY_KEY_OBJECT_DEFINITION_DIR = "nagios.object.definition.dir",
+			PROPERTY_KEY_OBJECT_DEFINITION_USER_TIMEPERIODS = "nagios.object.definition.user.timeperiods",
 			PROPERTY_KEY_RESTART_CMD = "nagios.updater.restart.cmd";
 
 	/*
@@ -212,11 +214,24 @@ public class NagiosUpdater extends Thread {
 		contactsFileObjects.addAll( GlobalNagiosProperties.getAllContactGroups() );
 		NagiosObjectWriter.writeToFile( new File( staticObjectDefinitionDir, "contacts.cfg" ), contactsFileObjects );
 
-		// Create the timeperiods object definition file
+		// Create the time periods object definition file
 		NagiosObjectWriter.writeToFile( new File( staticObjectDefinitionDir, "timeperiods.cfg" ), TimePeriod.getAllDefaultTimePeriods() );
 
 		// Create the commands object definition file
 		NagiosObjectWriter.writeToFile( new File( staticObjectDefinitionDir, "commands.cfg" ), GlobalNagiosProperties.getAllCommands() );
+
+		// Copy the user time periods object definition file if provided one
+		String userTimeperiods = GlobalNagiosProperties.getStringProperty( PROPERTY_KEY_OBJECT_DEFINITION_USER_TIMEPERIODS, "" );
+		if ( !userTimeperiods.isEmpty() ) {
+			File userTimeperiodsFile = new File( userTimeperiods );
+			if ( userTimeperiodsFile.exists() ) {
+				try {
+					Files.copy( userTimeperiodsFile.toPath(), new File( staticObjectDefinitionDir, "user_timeperiods.cfg" ).toPath(), StandardCopyOption.REPLACE_EXISTING );
+				} catch ( IOException e ) {
+					throw new CandlestackNagiosException( "Failed to copy user timeperiods object definition file to static directory", e );
+				}
+			}
+		}
 
 	}
 

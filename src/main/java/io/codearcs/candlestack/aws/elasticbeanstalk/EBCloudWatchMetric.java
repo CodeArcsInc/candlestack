@@ -71,14 +71,13 @@ public enum EBCloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-
 		long warning = GlobalAWSProperties.getEBCloudWatchMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getEBCloudWatchMetricCriticalLevel( instanceId, this );
-
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command, notes, contactGroups );
+		String notificationPeriod = GlobalAWSProperties.getEBServiceNotificationPeriod( instanceId );
 
+		return new Service( serviceName, instanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
 
@@ -104,5 +103,6 @@ public enum EBCloudWatchMetric implements CloudWatchMetric {
 	public String getName() {
 		return name();
 	}
+
 
 }

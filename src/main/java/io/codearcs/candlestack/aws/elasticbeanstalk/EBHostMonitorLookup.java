@@ -144,6 +144,9 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 				continue;
 			}
 
+			// Get the notificaiton period override if there is one
+			String notificationPeriod = GlobalAWSProperties.getEBServiceNotificationPeriod( environment.getEnvironmentName() );
+
 			// Define the host group object for this environment
 			HostGroup hostGroup = new HostGroup( environment.getEnvironmentName(), environment.getDescription() );
 			hostGroups.add( hostGroup );
@@ -161,7 +164,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 				for ( Instance instance : instances ) {
 					// Make sure the instance is old enough to be monitored
 					if ( minLaunchAge.after( instance.getLaunchTime() ) ) {
-						hostGroup.addHost( createHostFromInstance( instance ) );
+						hostGroup.addHost( createHostFromInstance( instance, notificationPeriod ) );
 					}
 				}
 			}
@@ -173,18 +176,18 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 	}
 
 
-	private Host createHostFromInstance( Instance instance ) throws CandlestackPropertiesException {
+	private Host createHostFromInstance( Instance instance, String notificationPeriod ) throws CandlestackPropertiesException {
 
 		// Lookup the alias and create the host object
 		String alias = EC2Util.getTagValue( instance, "Name" );
 		Host host = new Host( instance.getInstanceId(), alias, instance.getPublicIpAddress(), contactGroups );
 
 		for ( EC2CloudWatchMetric metric : ec2CloudWatchMetrics ) {
-			host.addService( metric.getService( EC2_COMMAND_SUFFIX, instance.getInstanceId(), contactGroups ) );
+			host.addService( metric.getService( EC2_COMMAND_SUFFIX, notificationPeriod, instance.getInstanceId(), contactGroups ) );
 		}
 
 		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
-			host.addService( metric.getService( EC2_COMMAND_SUFFIX, instance.getInstanceId(), contactGroups ) );
+			host.addService( metric.getService( EC2_COMMAND_SUFFIX, notificationPeriod, instance.getInstanceId(), contactGroups ) );
 		}
 
 		return host;

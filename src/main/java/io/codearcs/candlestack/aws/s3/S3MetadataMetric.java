@@ -55,14 +55,13 @@ public enum S3MetadataMetric implements AWSMetric {
 
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-
 		long warning = GlobalAWSProperties.getS3MetadataMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getS3MetadataMetricCriticalLevel( instanceId, this );
-
 		String command = commandName + "!" + instanceId + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command, notes, contactGroups );
+		String notificationPeriod = GlobalAWSProperties.getS3ServiceNotificationPeriod( instanceId );
 
+		return new Service( serviceName, instanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
 

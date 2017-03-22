@@ -28,12 +28,13 @@ public class Service implements NagiosObject {
 	private boolean notificationsEnabled;
 
 
-	public Service( String description, String hostName, String checkCommand, String notes, Set<String> contactGroups ) {
+	public Service( String description, String hostName, String checkCommand, String notes, String notificationPeriod, Set<String> contactGroups ) {
 
 		this.description = description;
 		this.hostName = hostName;
 		this.checkCommand = checkCommand;
 		this.notes = notes;
+		this.notificationPeriod = notificationPeriod;
 		this.contactGroups = Collections.unmodifiableSet( new HashSet<>( contactGroups ) );
 
 		maxCheckAttempts = 3;
@@ -43,7 +44,6 @@ public class Service implements NagiosObject {
 		notificationsEnabled = true;
 
 		checkPeriod = TimePeriod.getTwentyFourSevenName();
-		notificationPeriod = TimePeriod.getTwentyFourSevenName();
 
 	}
 

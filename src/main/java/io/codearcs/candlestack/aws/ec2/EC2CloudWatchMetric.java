@@ -82,17 +82,17 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-		return getService( "", instanceId, contactGroups );
+		return getService( "", GlobalAWSProperties.getEC2ServiceNotificationPeriod( instanceId ), instanceId, contactGroups );
 	}
 
 
-	public Service getService( String commanNameSuffix, String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
+	public Service getService( String commanNameSuffix, String notificationPeriod, String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
 		long warning = GlobalAWSProperties.getEC2CloudWatchMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getEC2CloudWatchMetricCriticalLevel( instanceId, this );
 
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command + commanNameSuffix, notes, contactGroups );
+		return new Service( serviceName, instanceId, command + commanNameSuffix, notes, notificationPeriod, contactGroups );
 	}
 
 

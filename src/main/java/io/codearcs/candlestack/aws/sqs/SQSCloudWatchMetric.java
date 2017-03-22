@@ -84,14 +84,13 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 
 	@Override
 	public Service getService( String queueName, Set<String> contactGroups ) throws CandlestackPropertiesException {
-
 		long warning = GlobalAWSProperties.getSQSCloudWatchMetricWarningLevel( queueName, this );
 		long critical = GlobalAWSProperties.getSQSCloudWatchMetricCriticalLevel( queueName, this );
-
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( queueName ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, queueName, command, notes, contactGroups );
+		String notificationPeriod = GlobalAWSProperties.getSQSServiceNotificationPeriod( queueName );
 
+		return new Service( serviceName, queueName, command, notes, notificationPeriod, contactGroups );
 	}
 
 

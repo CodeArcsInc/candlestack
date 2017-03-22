@@ -12,6 +12,7 @@ import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 import io.codearcs.candlestack.aws.s3.S3MetadataMetric;
 import io.codearcs.candlestack.aws.sqs.SQSCloudWatchMetric;
 import io.codearcs.candlestack.aws.sqs.SQSQueueAttribute;
+import io.codearcs.candlestack.nagios.object.timeperiod.TimePeriod;
 
 
 public class GlobalAWSProperties extends GlobalCandlestackProperties {
@@ -27,6 +28,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	private static final int DEFAULT_METRICS_FETCHER_SLEEP_MIN = 5,
 			DEFAULT_NEW_RESOURCE_MONITOR_DELAY_MIN = 30;
+
+	private static final String DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD = TimePeriod.getTwentyFourSevenName();
 
 	private static final String REGION_PROPERTY_KEY = "aws.region",
 			LOGS_HOST = "aws.logs.host",
@@ -77,7 +80,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 
 	private static final String EB_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.eb.cloudwatch.metric.warning.",
-			EB_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.eb.cloudwatch.metric.critical.";
+			EB_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.eb.cloudwatch.metric.critical.",
+			EB_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.eb.service.notification.period.";
 
 
 	public static boolean isEBEnabled() throws CandlestackPropertiesException {
@@ -92,6 +96,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getEBEnvrionmentNameRegex() throws CandlestackPropertiesException {
 		return getStringProperty( EB_ENVIRONMENT_NAME_REGEX, "" ).trim();
+	}
+
+
+	public static String getEBServiceNotificationPeriod( String environmentName ) throws CandlestackPropertiesException {
+		return getStringProperty( EB_SERVICE_NOTIFICATION_PERIOD_PREFIX + environmentName, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 
@@ -158,7 +167,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
 			EC2_GRAPHITE_METRIC_CRITICAL_PREFIX = "aws.ec2.graphite.metric.critical.",
 			EC2_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.ec2.cloudwatch.metric.warning.",
-			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.";
+			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.",
+			EC2_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.ec2.service.notification.period.";
 
 
 	public static boolean isEC2Enabled() throws CandlestackPropertiesException {
@@ -173,6 +183,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getEC2NameRegex() throws CandlestackPropertiesException {
 		return getStringProperty( EC2_NAME_REGEX, "" ).trim();
+	}
+
+
+	public static String getEC2ServiceNotificationPeriod( String instanceId ) throws CandlestackPropertiesException {
+		return getStringProperty( EC2_SERVICE_NOTIFICATION_PERIOD_PREFIX + instanceId, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 
@@ -264,7 +279,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	private static final String SQS_QUEUE_ATTRIBUTE_WARNING_PREFIX = "aws.sqs.queue.attribute.warning.",
 			SQS_QUEUE_ATTRIBUTE_CRITICAL_PREFIX = "aws.sqs.queue.attribute.critical.",
 			SQS_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.sqs.cloudwatch.metric.warning.",
-			SQS_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.sqs.cloudwatch.metric.critical.";
+			SQS_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.sqs.cloudwatch.metric.critical.",
+			SQS_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.sqs.service.notification.period.";
 
 
 	public static boolean isSQSEnabled() throws CandlestackPropertiesException {
@@ -279,6 +295,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getSQSQueueNameRegex() throws CandlestackPropertiesException {
 		return getStringProperty( SQS_QUEUE_NAME_REGEX, "" ).trim();
+	}
+
+
+	public static String getSQSServiceNotificationPeriod( String queueName ) throws CandlestackPropertiesException {
+		return getStringProperty( SQS_SERVICE_NOTIFICATION_PERIOD_PREFIX + queueName, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 
@@ -380,7 +401,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 
 	private static final String RDS_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.rds.cloudwatch.metric.warning.",
-			RDS_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.rds.cloudwatch.metric.critical.";
+			RDS_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.rds.cloudwatch.metric.critical.",
+			RDS_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.rds.service.notification.period.";
 
 
 	public static boolean isRDSEnabled() throws CandlestackPropertiesException {
@@ -395,6 +417,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getRDSDBInstanceRegex() throws CandlestackPropertiesException {
 		return getStringProperty( RDS_DBINSTANCE_REGEX, "" ).trim();
+	}
+
+
+	public static String getRDSServiceNotificationPeriod( String dbInstance ) throws CandlestackPropertiesException {
+		return getStringProperty( RDS_SERVICE_NOTIFICATION_PERIOD_PREFIX + dbInstance, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 
@@ -458,7 +485,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 
 	private static final String S3_METADATA_METRIC_WARNING_PREFIX = "aws.s3.metadata.metric.warning.",
-			S3_METADATA_METRIC_CRITICAL_PREFIX = "aws.s3.metadata.metric.critical.";
+			S3_METADATA_METRIC_CRITICAL_PREFIX = "aws.s3.metadata.metric.critical.",
+			S3_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.s3.service.notification.period.";
 
 
 	public static boolean isS3Enabled() throws CandlestackPropertiesException {
@@ -473,6 +501,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static String getS3Locations() throws CandlestackPropertiesException {
 		return getStringProperty( S3_LOCATIONS, "" ).trim();
+	}
+
+
+	public static String getS3ServiceNotificationPeriod( String locationId ) throws CandlestackPropertiesException {
+		return getStringProperty( S3_SERVICE_NOTIFICATION_PERIOD_PREFIX + locationId, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 
