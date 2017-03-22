@@ -32,7 +32,7 @@ public class EBUtil {
 	}
 
 
-	public static boolean isEnvironmentEligible( String environmentName, String environmentNamePrefix, String environmentNameRegex ) {
+	private static boolean isEnvironmentEligible( String environmentName, String environmentNamePrefix, String environmentNameRegex ) {
 		boolean eligible = true;
 		if ( !environmentNamePrefix.isEmpty() && !environmentName.startsWith( environmentNamePrefix ) ) {
 			eligible = false;

@@ -2,10 +2,12 @@ package io.codearcs.candlestack.aws.rds;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClientBuilder;
@@ -35,6 +37,8 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 	private String dbInstancePrefix, dbInstanceRegex;
 
+	private long newResourceMonitorDelayMillis;
+
 
 	public RDSHostMonitorLookup( Set<String> contactGroups ) throws CandlestackPropertiesException {
 
@@ -42,6 +46,8 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
 		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
+
+		newResourceMonitorDelayMillis = TimeUnit.MINUTES.toMillis( GlobalAWSProperties.getRDSNewResourceMonitorDelay() );
 
 		cloudWatchMetrics = GlobalAWSProperties.getRDSCloudwatchMetricsToMonitor();
 
@@ -88,6 +94,9 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		// Create a host group for non clustered instances
 		HostGroup nonClusterHostGroup = new HostGroup( "aws_rds_non_cluster", "AWS RDS Non-Clustered Instances" );
 
+		// Figure out the minimum launch age for the instance to monitored
+		Date minLaunchAge = new Date( System.currentTimeMillis() - newResourceMonitorDelayMillis );
+
 		// Get the DB instances and add them to the correct host group
 		Set<String> replicaInstances = RDSUtil.getReplicaInstances( rdsClient );
 		DescribeDBInstancesResult dbInstanceResults = rdsClient.describeDBInstances();
@@ -97,6 +106,11 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 			String dbInstanceId = dbInstance.getDBInstanceIdentifier();
 			RDSType rdsType = RDSType.getTypeFromEngine( dbInstance.getEngine() );
 			if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
+				continue;
+			}
+
+			// Make sure the DB instance is old enough to be monitored
+			if ( minLaunchAge.before( dbInstance.getInstanceCreateTime() ) ) {
 				continue;
 			}
 

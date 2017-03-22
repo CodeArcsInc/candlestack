@@ -2,10 +2,12 @@ package io.codearcs.candlestack.aws.ec2;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
@@ -33,6 +35,8 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 
 	private Set<EC2GraphiteMetric> ec2GraphiteMetrics;
 
+	private long newResourceMonitorDelayMillis;
+
 
 	public EC2HostMonitorLookup( Set<String> contactGroups ) throws CandlestackPropertiesException {
 
@@ -40,6 +44,8 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 
 		namePrefix = GlobalAWSProperties.getEC2NamePrefix();
 		nameRegex = GlobalAWSProperties.getEC2NameRegex();
+
+		newResourceMonitorDelayMillis = TimeUnit.MINUTES.toMillis( GlobalAWSProperties.getEC2NewResourceMonitorDelay() );
 
 		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToMonitor();
 		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetricsToMonitor();
@@ -97,12 +103,23 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 		// Define the host group object for stand along EC2 instances
 		List<HostGroup> hostGroups = new ArrayList<>();
 		HostGroup hostGroup = new HostGroup( EC2Util.TYPE_NAME, "AWS Standalone EC2 Instances" );
-		hostGroups.add( hostGroup );
+
+		// Figure out the minimum launch age for the instance to monitored
+		Date minLaunchAge = new Date( System.currentTimeMillis() - newResourceMonitorDelayMillis );
 
 		// Lookup the EC2 instances and define the necessary hosts adding them to the host group
 		List<Instance> instances = EC2Util.lookupElligibleInstances( ec2Client, namePrefix, nameRegex );
 		for ( Instance instance : instances ) {
-			hostGroup.addHost( createHostFromInstance( instance ) );
+
+			// Make sure the instance is old enough to be monitored
+			if ( minLaunchAge.after( instance.getLaunchTime() ) ) {
+				hostGroup.addHost( createHostFromInstance( instance ) );
+			}
+
+		}
+
+		if ( !hostGroup.getHosts().isEmpty() ) {
+			hostGroups.add( hostGroup );
 		}
 
 		return hostGroups;

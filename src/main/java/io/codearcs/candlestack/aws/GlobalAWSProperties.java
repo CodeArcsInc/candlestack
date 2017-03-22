@@ -25,7 +25,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 * ---------------------------------------
 	 */
 
-	private static final int DEFAULT_METRICS_FETCHER_SLEEP_MIN = 5;
+	private static final int DEFAULT_METRICS_FETCHER_SLEEP_MIN = 5,
+			DEFAULT_NEW_RESOURCE_MONITOR_DELAY_MIN = 30;
 
 	private static final String REGION_PROPERTY_KEY = "aws.region",
 			LOGS_HOST = "aws.logs.host",
@@ -49,7 +50,7 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	/*
 	 * ---------------------------------------
-	 * Properties related to ElasticBeanstalk
+	 * Properties related to CloudWatch
 	 * ---------------------------------------
 	 */
 	private static final String CLOUDWATCH_DETAILED_MONITORING_ENABLED = "aws.cloudwatch.detailed.monitoring.enabled";
@@ -71,7 +72,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			EB_METRICS_FETCHER_SLEEP = "aws.eb.metrics.fetcher.sleep.min",
 			EB_CLOUDWATCH_METRICS_MONITOR = "aws.eb.cloudwatch.metrics.monitor",
 			EB_CLOUDWATCH_METRICS_FETCH = "aws.eb.cloudwatch.metrics.fetch",
-			EB_ENABLED = "aws.eb.enabled";
+			EB_ENABLED = "aws.eb.enabled",
+			EB_NEW_RESOURCE_MONITOR_DELAY = "aws.eb.new.resource.monitor.delay.min";
 
 
 	private static final String EB_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.eb.cloudwatch.metric.warning.",
@@ -95,6 +97,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static int getEBMetricsFetcherSleep() throws CandlestackPropertiesException {
 		return getIntProperty( EB_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
+
+
+	public static int getEBNewResourceMonitorDelay() throws CandlestackPropertiesException {
+		return getIntProperty( EB_NEW_RESOURCE_MONITOR_DELAY, DEFAULT_NEW_RESOURCE_MONITOR_DELAY_MIN );
 	}
 
 
@@ -144,7 +151,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			EC2_GRAPHITE_METRICS_MONITOR = "aws.ec2.graphite.metrics.monitor",
 			EC2_CLOUDWATCH_METRICS_MONITOR = "aws.ec2.cloudwatch.metrics.monitor",
 			EC2_CLOUDWATCH_METRICS_FETCH = "aws.ec2.cloudwatch.metrics.fetch",
-			EC2_ENABLED = "aws.ec2.enabled";
+			EC2_ENABLED = "aws.ec2.enabled",
+			EC2_NEW_RESOURCE_MONITOR_DELAY = "aws.ec2.new.resource.monitor.delay.min";
 
 
 	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
@@ -170,6 +178,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static int getEC2MetricsFetcherSleep() throws CandlestackPropertiesException {
 		return getIntProperty( EC2_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
+
+
+	public static int getEC2NewResourceMonitorDelay() throws CandlestackPropertiesException {
+		return getIntProperty( EC2_NEW_RESOURCE_MONITOR_DELAY, DEFAULT_NEW_RESOURCE_MONITOR_DELAY_MIN );
 	}
 
 
@@ -362,7 +375,8 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 			RDS_METRICS_FETCHER_SLEEP = "aws.rds.metrics.fetcher.sleep.min",
 			RDS_CLOUDWATCH_METRICS_MONITOR = "aws.rds.cloudwatch.metrics.monitor",
 			RDS_CLOUDWATCH_METRICS_FETCH = "aws.rds.cloudwatch.metrics.fetch",
-			RDS_ENABLED = "aws.rds.enabled";
+			RDS_ENABLED = "aws.rds.enabled",
+			RDS_NEW_RESOURCE_MONITOR_DELAY = "aws.eb.new.resource.monitor.delay.min";
 
 
 	private static final String RDS_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.rds.cloudwatch.metric.warning.",
@@ -386,6 +400,11 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static int getRDSMetricsFetcherSleep() throws CandlestackPropertiesException {
 		return getIntProperty( RDS_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
+
+
+	public static int getRDSNewResourceMonitorDelay() throws CandlestackPropertiesException {
+		return getIntProperty( RDS_NEW_RESOURCE_MONITOR_DELAY, DEFAULT_NEW_RESOURCE_MONITOR_DELAY_MIN );
 	}
 
 

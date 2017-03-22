@@ -2,10 +2,12 @@ package io.codearcs.candlestack.aws.elasticbeanstalk;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
@@ -45,6 +47,8 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 	private Set<EBCloudWatchMetric> ebCloudWatchMetrics;
 
+	private long newResourceMonitorDelayMillis;
+
 
 	public EBHostMonitorLookup( Set<String> contactGroups ) throws CandlestackPropertiesException {
 
@@ -52,6 +56,8 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 		environmentNamePrefix = GlobalAWSProperties.getEBEnvrionmentNamePrefix();
 		environmentNameRegex = GlobalAWSProperties.getEBEnvrionmentNameRegex();
+
+		newResourceMonitorDelayMillis = TimeUnit.MINUTES.toMillis( GlobalAWSProperties.getEBNewResourceMonitorDelay() );
 
 		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToMonitor();
 		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetricsToMonitor();
@@ -119,6 +125,9 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 		List<HostGroup> hostGroups = new ArrayList<>();
 
+		// Figure out the minimum launch age for the environment to monitored
+		Date minLaunchAge = new Date( System.currentTimeMillis() - newResourceMonitorDelayMillis );
+
 		// Go ahead and fetch the EC2 instances in bulk rather than making calls for the individual environments
 		Map<String, List<Instance>> environmentInstanceMap = EBUtil.lookupInstances( ec2Client, environmentNamePrefix, environmentNameRegex );
 
@@ -127,6 +136,11 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 			// Skip over ineligible environments
 			if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix, environmentNameRegex ) ) {
+				continue;
+			}
+
+			// Make sure the environment is old enough to be monitored
+			if ( minLaunchAge.before( environment.getDateCreated() ) ) {
 				continue;
 			}
 
@@ -145,7 +159,10 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			List<Instance> instances = environmentInstanceMap.get( environment.getEnvironmentName() );
 			if ( instances != null ) {
 				for ( Instance instance : instances ) {
-					hostGroup.addHost( createHostFromInstance( instance ) );
+					// Make sure the instance is old enough to be monitored
+					if ( minLaunchAge.after( instance.getLaunchTime() ) ) {
+						hostGroup.addHost( createHostFromInstance( instance ) );
+					}
 				}
 			}
 
