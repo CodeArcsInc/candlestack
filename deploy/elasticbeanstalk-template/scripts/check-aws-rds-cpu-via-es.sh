@@ -180,8 +180,8 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
-query=$(get_query $(get_epoch_in_ms 'now - 20 minute') $(get_epoch_in_ms 'now'))
+timeinterval="20 minute"
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -203,13 +203,11 @@ done < <( clean_input "$input")
 
 cpuavg=$((cputotal/counter))
 if  check_exp "$cpuavg <= $warning" ;then
-	log_msg "OK: CPU Utilization = $cpuavg%"
-
+	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
 elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
-	log_msg "WARNING: CPU Utilization = $cpuavg%"
-
+	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
 elif check_exp "$cpuavg > $critical"  ;then
-	log_msg "CRITICAL: CPU Utilization = $cpuavg%"
+	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
 else 
 	log_msg "UNKNOWN: Could not determine CPU utilization"
 fi

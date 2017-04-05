@@ -198,10 +198,8 @@ while read line; do
 	
 	if  check_exp "$metric_value <= $warning" ;then
 		log_msg "OK: Storage Used = $metric_value bytes"
-
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
 		log_msg "WARNING: Storage Used = $metric_value bytes"
-
 	elif check_exp "$metric_value > $critical"  ;then
 		log_msg "CRITICAL: Storgae Used = $metric_value bytes"
 	else 

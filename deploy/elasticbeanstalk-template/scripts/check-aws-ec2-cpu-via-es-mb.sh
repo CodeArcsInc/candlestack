@@ -44,27 +44,20 @@ function get_query {
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "type:(\"aws_sqs\")"
+						"query": "instance_id:(\"$instanceid\")"
 					  }
-					}
+					},
+					"_cache": true
 				  }
 				},
 				{
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "metric_name:(\"NumberOfMessagesSent\")"
+						"query": "metricset.name:(\"cpu\")"
 					  }
-					}
-				  }
-				},
-				{
-				  "fquery": {
-					"query": {
-					  "query_string": {
-						"query": "instanceId:(\"$instanceid\")"
-					  }
-					}
+					},
+					"_cache": true
 				  }
 				}
 			  ]
@@ -82,7 +75,7 @@ function get_query {
 		  "@end-highlight@"
 		]
 	  },
-	  "size": 1,
+	  "size": 500,
 	  "sort": [
 		{
 		  "@timestamp": {
@@ -100,11 +93,11 @@ function run_query {
 	local query="$1"
 	local today="$2"
 	local yesterday="$3"
-	local endpoint="https://$host/candlestack-$today,candlestack-$yesterday/_search?timeout=3m"
+	local endpoint="https://$host/metricbeat-$today,metricbeat-$yesterday/_search?timeout=3m"
 
-	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/candlestack-$today" -H "Authorization: Basic $authtoken")
+	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/metricbeat-$today" -H "Authorization: Basic $authtoken")
 	if [ "$statuscode" == "404" ];then
-		endpoint="https://$host/candlestack-$yesterday/_search?timeout=3m"
+		endpoint="https://$host/metricbeat-$yesterday/_search?timeout=3m"
 	fi
 
 	curl -sm 10 "$endpoint" \
@@ -113,7 +106,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
+			jq -r '.hits.hits[]._source | [.system.cpu.idle.pct] | @csv'
 }
 
 # This function returns epoch in ms from data_string
@@ -180,8 +173,8 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
-query=$(get_query $(get_epoch_in_ms 'now - 20 minute') $(get_epoch_in_ms 'now'))
+timeinterval="20 minute"
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -192,20 +185,26 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+counter=0
+cpuidletotal=0
 while read line; do
-	# This line creates 3 variables metric_name, metric_value and timestamp
-	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	
-	if  check_exp "$metric_value >= $warning" ;then
-		log_msg "OK: Number of messages sent = $metric_value"
-	elif check_exp "$metric_value < $warning && $metric_value >= $critical" ;then
-		log_msg "WARNING: Number of Messages Sent = $metric_value"
-	elif check_exp "$metric_value < $critical"  ;then
-		log_msg "CRITICAL: Number of messages sent = $metric_value"
-	else 
-		log_msg "UNKNOWN: Could not determine number of messages sent"
-	fi
-	
+	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
+	cpuidletotal=$(echo "$cpuidletotal + $metric_value" | bc)
+	counter=$(echo "$counter + 1" | bc)
 done < <( clean_input "$input")
+
+cpuidleavg=$(echo "scale=4; $cpuidletotal / $counter" | bc)
+cpuidleavg=$(echo "scale=2; $cpuidleavg * 100" | bc)
+cpuavg=$(echo "100 - $cpuidleavg" | bc)
+
+if  check_exp "$cpuavg <= $warning" ;then
+	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
+	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $critical"  ;then
+	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
+else 
+	log_msg "UNKNOWN: Could not determine CPU utilization"
+fi
 
 print_msg_and_exit

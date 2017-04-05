@@ -53,7 +53,7 @@ function get_query {
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "metric_name:(\"NetworkIn\")"
+						"query": "metric_name:(\"CPUUtilization\")"
 					  }
 					}
 				  }
@@ -82,7 +82,7 @@ function get_query {
 		  "@end-highlight@"
 		]
 	  },
-	  "size": 1,
+	  "size": 100,
 	  "sort": [
 		{
 		  "@timestamp": {
@@ -181,7 +181,8 @@ function check_exp {
 }
 
 
-query=$(get_query $(get_epoch_in_ms 'now - 20 minute') $(get_epoch_in_ms 'now'))
+timeinterval="20 minute"
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -192,22 +193,24 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+counter=0
+cputotal=0
 while read line; do
 	# This line creates 3 variables metric_name, metric_value and timestamp
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	
-	if  check_exp "$metric_value >= $warning" ;then
-		log_msg "OK: Number of network in bytes = $metric_value"
-
-	elif check_exp "$metric_value < $warning && $metric_value >= $critical" ;then
-		log_msg "WARNING: Number of network in bytes = $metric_value"
-
-	elif check_exp "$metric_value < $critical"  ;then
-		log_msg "CRITICAL: Number of network in bytes = $metric_value"
-	else 
-		log_msg "UNKNOWN: Could not determine number of network in bytes"
-	fi
-	
+	cputotal=$((cputotal+metric_value))
+	counter=$((counter+1))
 done < <( clean_input "$input")
+
+cpuavg=$((cputotal/counter))
+if  check_exp "$cpuavg <= $warning" ;then
+	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
+	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $critical"  ;then
+	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
+else 
+	log_msg "UNKNOWN: Could not determine CPU utilization"
+fi
 
 print_msg_and_exit

@@ -9,22 +9,26 @@ import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
 
-public enum EC2GraphiteMetric implements AWSMetric {
+public enum EC2MetricbeatMetric implements AWSMetric {
 
-	DiskUtilization( "check-disk-utilization",
-			"check-aws-ec2-disk-utilization",
-			"check-aws-ec2-disk-utilization-via-es.sh",
+			"check-aws-ec2-cpu-via-es-mb.sh",
+			"Checks to see if the EC2 instance is experiencing heavy CPU load. In the event an alert is triggered check the EC2 instance for processing consuming large amount of CPU or potentially a noisy neighbor stealing resources." ),
+
+			"check-aws-ec2-network-in-via-es-mb.sh",
+			"Checks to see if the EC2 instance has network traffice flowing into the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent other systems from connecting." ),
+
+			"check-aws-ec2-network-out-via-es-mb.sh",
+			"Checks to see if the EC2 instance has network traffice flowing out of the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent it from sending out data." ),
+			"check-aws-ec2-disk-utilization-via-es-mb.sh",
 			"Checks to see if the EC2 instance is consuming a large amount of disk space. In the event an alert is triggered check the EC2 instance for potential issues resulting in large disk consumption." ),
 
-	FreeMemory( "check-free-memory",
-			"check-aws-ec2-free-memory",
-			"check-aws-ec2-free-memory-via-es.sh",
+			"check-aws-ec2-free-memory-via-es-mb.sh",
 			"Checks to see if the EC2 instance is consuming a large amount of memory. In the event an alert is triggered check the EC2 instances for potential memory leaks." );
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
 
-	private EC2GraphiteMetric( String serviceName, String commandName, String scriptFileName, String notes ) {
+	private EC2MetricbeatMetric( String serviceName, String commandName, String scriptFileName, String notes ) {
 		this.serviceName = serviceName;
 		this.commandName = commandName;
 		this.scriptFileName = scriptFileName;
@@ -59,13 +63,13 @@ public enum EC2GraphiteMetric implements AWSMetric {
 
 	@Override
 	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-		return getService( "", instanceId, GlobalAWSProperties.getEC2ServiceNotificationPeriod( instanceId ), contactGroups );
+		return getService( "", GlobalAWSProperties.getEC2ServiceNotificationPeriod( instanceId ), instanceId, contactGroups );
 	}
 
 
-	public Service getService( String commanNameSuffix, String instanceId, String notificationPeriod, Set<String> contactGroups ) throws CandlestackPropertiesException {
-		long warning = GlobalAWSProperties.getEC2GraphiteMetricWarningLevel( instanceId, this );
-		long critical = GlobalAWSProperties.getEC2GraphiteMetricCriticalLevel( instanceId, this );
+	public Service getService( String commanNameSuffix, String notificationPeriod, String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
+		long warning = GlobalAWSProperties.getEC2MetricbeatMetricWarningLevel( instanceId, this );
+		long critical = GlobalAWSProperties.getEC2MetricbeatMetricCriticalLevel( instanceId, this );
 
 		String command = commandName + "!" + instanceId + "!" + warning + "!" + critical;
 

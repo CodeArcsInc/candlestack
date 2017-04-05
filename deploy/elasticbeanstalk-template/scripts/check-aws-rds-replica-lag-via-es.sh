@@ -198,10 +198,8 @@ while read line; do
 	
 	if  check_exp "$metric_value <= $warning" ;then
 		log_msg "OK: Replica Lag = $metric_value ms"
-
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
 		log_msg "WARNING: Replica Lag = $metric_value ms"
-
 	elif check_exp "$metric_value > $critical"  ;then
 		log_msg "CRITICAL: Replica Lag = $metric_value ms"
 	else 

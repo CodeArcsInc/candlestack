@@ -82,7 +82,7 @@ function get_query {
 		  "@end-highlight@"
 		]
 	  },
-	  "size": 1,
+	  "size": 500,
 	  "sort": [
 		{
 		  "@timestamp": {
@@ -180,8 +180,8 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
-query=$(get_query $(get_epoch_in_ms 'now - 10 minute') $(get_epoch_in_ms 'now'))
+timeinterval="10 minute"
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -192,22 +192,24 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+counter=0
+healthtotal=0
 while read line; do
 	# This line creates 3 variables metric_name, metric_value and timestamp
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	
-	if  check_exp "$metric_value < $warning" ;then
-		log_msg "OK: Environment Health = $metric_value"
-
-	elif check_exp "$metric_value >= $warning && $metric_value < $critical" ;then
-		log_msg "WARNING: Environment Health = $metric_value"
-
-	elif check_exp "$metric_value >= $critical"  ;then
-		log_msg "CRITICAL: Environment Health = $metric_value"
-	else 
-		log_msg "UNKNOWN: Could not determine environment health"
-	fi
-	
+	healthtotal=$((healthtotal+metric_value))
+	counter=$((counter+1))
 done < <( clean_input "$input")
+
+healthavg=$((healthtotal/counter))
+if  check_exp "$healthavg <= $warning" ;then
+	log_msg "OK: Environment Health = average of $healthavg over $timeinterval"
+elif check_exp "$healthavg > $warning && $healthavg <= $critical" ;then
+	log_msg "WARNING: Environment Health = average of $healthavg over $timeinterval"
+elif check_exp "$healthavg > $critical"  ;then
+	log_msg "CRITICAL: Environment Health = average of $healthavg over $timeinterval"
+else 
+	log_msg "UNKNOWN: Could not determine environment health"
+fi
 
 print_msg_and_exit

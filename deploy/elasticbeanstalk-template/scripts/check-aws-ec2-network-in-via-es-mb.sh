@@ -2,7 +2,7 @@
 
 host=$1
 authtoken=$2
-awsinstanceid=$3
+instanceid=$3
 warning=$4
 critical=$5
 
@@ -41,10 +41,27 @@ function get_query {
 				  }
 				},
 				{
+				  "terms": {
+					"metricset.name": [
+					  "network"
+					]
+				  }
+				},
+				{
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "metric_name:(\"$awsinstanceid.memory.free\")"
+						"query": "instance_id:(\"$instanceid\")"
+					  }
+					},
+					"_cache": true
+				  }
+				},
+				{
+				  "fquery": {
+					"query": {
+					  "query_string": {
+						"query": "system.network.name:(\"eth0\")"
 					  }
 					},
 					"_cache": true
@@ -65,7 +82,7 @@ function get_query {
 		  "@end-highlight@"
 		]
 	  },
-	  "size": 1,
+	  "size": 500,
 	  "sort": [
 		{
 		  "@timestamp": {
@@ -83,11 +100,11 @@ function run_query {
 	local query="$1"
 	local today="$2"
 	local yesterday="$3"
-	local endpoint="https://$host/graphite-$today,graphite-$yesterday/_search?timeout=3m"
+	local endpoint="https://$host/metricbeat-$today,metricbeat-$yesterday/_search?timeout=3m"
 
-	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/graphite-$today" -H "Authorization: Basic $authtoken")
+	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/metricbeat-$today" -H "Authorization: Basic $authtoken")
 	if [ "$statuscode" == "404" ];then
-		endpoint="https://$host/graphite-$yesterday/_search?timeout=3m"
+		endpoint="https://$host/metricbeat-$yesterday/_search?timeout=3m"
 	fi
 
 	curl -sm 10 "$endpoint" \
@@ -96,7 +113,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
+			jq -r '.hits.hits[]._source | [.system.network.in.bytes]|@csv'
 }
 
 # This function returns epoch in ms from data_string
@@ -163,8 +180,8 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
-query=$(get_query $(get_epoch_in_ms 'now - 10 minute') $(get_epoch_in_ms 'now'))
+timeinterval="10 minute"
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -175,22 +192,31 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+counter=0
+networkinlast=0
+networkinfirst=0
 while read line; do
-	# This line creates 3 variables metric_name, metric_value and timestamp
-	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	
-	if  check_exp "$metric_value > $warning" ;then
-		log_msg "OK: Memory Free = $metric_value bytes"
-
-	elif check_exp "$metric_value <= $warning && $metric_value > $critical" ;then
-		log_msg "WARNING: Memory Free = $metric_value bytes"
-
-	elif check_exp "$metric_value <= $critical"  ;then
-		log_msg "CRITICAL: Memory Free = $metric_value bytes"
-	else 
-		log_msg "UNKNOWN: Could not determine amount of memory free"
+	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
+	if check_exp "$counter == 0" ; then
+		networkinlast=$metric_value
+		networkinfirst=$metric_value
+	else
+		networkinfirst=$metric_value
 	fi
-	
+	counter=$(echo "$counter + 1" | bc)
 done < <( clean_input "$input")
+
+networkin=$(echo "$networkinlast - $networkinfirst" | bc)
+networkinmb=$(echo "$networkin / 1024" | bc)
+
+if  check_exp "$networkin >= $warning" ;then
+	log_msg "OK: Network in = $networkinmb kb over $timeinterval"
+elif check_exp "$networkin < $warning && $networkin >= $critical" ;then
+	log_msg "WARNING: Network in = $networkinmb kb over $timeinterval"
+elif check_exp "$networkin < $critical"  ;then
+	log_msg "CRITICAL: Network in = $networkinmb kb over $timeinterval"
+else 
+	log_msg "UNKNOWN: Could not determine network in"
+fi
 
 print_msg_and_exit

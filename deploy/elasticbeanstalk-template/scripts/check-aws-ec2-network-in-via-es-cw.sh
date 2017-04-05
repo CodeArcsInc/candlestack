@@ -44,7 +44,7 @@ function get_query {
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "type:(\"aws_sqs\")"
+						"query": "type:(\"aws_ec2\")"
 					  }
 					}
 				  }
@@ -53,7 +53,7 @@ function get_query {
 				  "fquery": {
 					"query": {
 					  "query_string": {
-						"query": "metric_name:(\"NumberOfMessagesSent\")"
+						"query": "metric_name:(\"NetworkIn\")"
 					  }
 					}
 				  }
@@ -197,13 +197,13 @@ while read line; do
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
 	
 	if  check_exp "$metric_value >= $warning" ;then
-		log_msg "OK: Number of messages sent = $metric_value"
+		log_msg "OK: Number of network in bytes = $metric_value"
 	elif check_exp "$metric_value < $warning && $metric_value >= $critical" ;then
-		log_msg "WARNING: Number of Messages Sent = $metric_value"
+		log_msg "WARNING: Number of network in bytes = $metric_value"
 	elif check_exp "$metric_value < $critical"  ;then
-		log_msg "CRITICAL: Number of messages sent = $metric_value"
+		log_msg "CRITICAL: Number of network in bytes = $metric_value"
 	else 
-		log_msg "UNKNOWN: Could not determine number of messages sent"
+		log_msg "UNKNOWN: Could not determine number of network in bytes"
 	fi
 	
 done < <( clean_input "$input")

@@ -198,10 +198,8 @@ while read line; do
 	
 	if  check_exp "$metric_value <= $warning" ;then
 		log_msg "OK: Queue Size = $metric_value"
-
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
 		log_msg "WARNING: Queue Size = $metric_value"
-
 	elif check_exp "$metric_value > $critical"  ;then
 		log_msg "CRITICAL: Queue Size = $metric_value"
 	else 

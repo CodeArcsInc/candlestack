@@ -201,10 +201,8 @@ while read line; do
 	
 	if  check_exp "$metric_value >= $warningepoch" ;then
 		log_msg "OK: Last Modified Timestamp = $(date -u -d @$metric_value)"
-
 	elif check_exp "$metric_value < $warningepoch && $metric_value >= $criticalepoch" ;then
 		log_msg "WARNING: Last Modified Timestamp = $(date -u -d @$metric_value)"
-
 	elif check_exp "$metric_value < $criticalepoch"  ;then
 		log_msg "CRITICAL: Last Modified Timestamp = $(date -u -d @$metric_value)"
 	else 

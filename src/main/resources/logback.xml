@@ -5,72 +5,23 @@
 	<appender name="STASH"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 
-		<!-- Note that the file property in RollingFileAppender (the parent of 
-			TimeBasedRollingPolicy) can be either set or omitted. By setting the file 
-			property of the containing FileAppender, you can decouple the location of 
-			the active log file and the location of the archived log files. The current 
-			logs will be always targeted at the file specified by the file property. 
-			It follows that the name of the currently active log file will not change 
-			over time. However, if you choose to omit the file property, then the active 
-			file will be computed anew for each period based on the value of fileNamePattern. -->
-
-
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 
-			<!-- Daily rollover. The rollover period is inferred from the value of 
-				fileNamePattern. The file name pattern shown below organizes log folders 
-				by year and month (pattern marked with aux is used for structuring) but roll-over 
-				log files every day at midnight (rollover is actually triggered by first 
-				log after midnight). Compression is enabled if the fileNamePattern ends in 
-				.gz or .zip -->
-
-			<fileNamePattern>./logs/%d{yyyy/MM, aux}/candlestack.%d{yyyy-MM-dd, UTC}.log</fileNamePattern>
-			
-
-			<!-- Or rollover whenever the file size reaches 100MB. Each time the current 
-				log file reaches maxFileSize before the current time period ends, it will 
-				be archived with an increasing index, starting at 0. -->
+			<fileNamePattern>/logs/%d{yyyy/MM, aux}/candlestack.%d{yyyy-MM-dd, UTC}.log</fileNamePattern>
 			<maxFileSize>100MB</maxFileSize>
-
-			<!-- Keep 365 days' worth of history. Note that as old archived log files 
-				are removed, any folders which were created for the purpose of log file archiving 
-				will be removed as appropriate -->
-			<maxHistory>365</maxHistory>
-
-			<!-- If set to true, archive removal will be executed on appender start 
-				up. By default this property is set to false. Archive removal is normally 
-				performed during roll over. However, some applications may not live long 
-				enough for roll over to be triggered. It follows that for such short-lived 
-				applications archive removal may never get a chance to execute. By setting 
-				cleanHistoryOnStart to true, archive removal is performed at appender start 
-				up. For example, each time the application starts up it would will delete 
-				archive files older than maxHistory -->
+			<maxHistory>30</maxHistory>
 			<cleanHistoryOnStart>true</cleanHistoryOnStart>
-
-			<!-- The property prudent may be useful if several processes are writing 
-				to the same files. The prudent option however may have significant impact 
-				in performance depending on environment. There is a FileLockSimulator class 
-				provided to test this But there are two restrictions when using prudent 1. 
-				In prudent mode, file compression is not supported nor allowed. (We can't 
-				have one JVM writing to a file while another JVM is compressing it.) 2. The 
-				file property of FileAppender cannot be set and must be left blank. Indeed, 
-				most operating systems do not allow renaming of a file while another process 
-				has it opened. -->
 
 		</rollingPolicy>
 
-		<!-- Logstash encoder that formats event sin JSON format -->
+		<!-- Logstash encoder that formats events in JSON format -->
 		<encoder
 			class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
 			
 			<providers>
-				<!-- provides the timestamp -->
+
 				<timestamp />
-				
-				<!-- mapped diagnostic fields 
-				<mdc/> -->
 				<message />
-				
 				<logstashMarkers />
 				<stackTrace />
 
@@ -98,8 +49,6 @@
 
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
       <pattern>%date{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg %n</pattern>
     </encoder>

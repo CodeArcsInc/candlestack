@@ -198,10 +198,8 @@ while read line; do
 	
 	if  check_exp "$metric_value <= $warning" ;then
 		log_msg "OK: Last Modified = $metric_value ms"
-
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
 		log_msg "WARNING: Last Modified = $metric_value ms"
-
 	elif check_exp "$metric_value > $critical"  ;then
 		log_msg "CRITICAL: Last Modified = $metric_value ms"
 	else 

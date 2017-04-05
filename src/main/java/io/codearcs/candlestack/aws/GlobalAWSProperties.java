@@ -6,7 +6,7 @@ import java.util.Set;
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.GlobalCandlestackProperties;
 import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
-import io.codearcs.candlestack.aws.ec2.EC2GraphiteMetric;
+import io.codearcs.candlestack.aws.ec2.EC2MetricbeatMetric;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBCloudWatchMetric;
 import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 import io.codearcs.candlestack.aws.s3.S3MetadataMetric;
@@ -157,15 +157,15 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	private static final String EC2_NAME_PREFIX = "aws.ec2.name.prefix",
 			EC2_NAME_REGEX = "aws.ec2.name.regex",
 			EC2_METRICS_FETCHER_SLEEP = "aws.ec2.metrics.fetcher.sleep.min",
-			EC2_GRAPHITE_METRICS_MONITOR = "aws.ec2.graphite.metrics.monitor",
+			EC2_METRICBEAT_METRICS_MONITOR = "aws.ec2.metricbeat.metrics.monitor",
 			EC2_CLOUDWATCH_METRICS_MONITOR = "aws.ec2.cloudwatch.metrics.monitor",
 			EC2_CLOUDWATCH_METRICS_FETCH = "aws.ec2.cloudwatch.metrics.fetch",
 			EC2_ENABLED = "aws.ec2.enabled",
 			EC2_NEW_RESOURCE_MONITOR_DELAY = "aws.ec2.new.resource.monitor.delay.min";
 
 
-	private static final String EC2_GRAPHITE_METRIC_WARNING_PREFIX = "aws.ec2.graphite.metric.warning.",
-			EC2_GRAPHITE_METRIC_CRITICAL_PREFIX = "aws.ec2.graphite.metric.critical.",
+	private static final String EC2_METRICBEAT_METRIC_WARNING_PREFIX = "aws.ec2.metricbeat.metric.warning.",
+			EC2_METRICBEAT_METRIC_CRITICAL_PREFIX = "aws.ec2.metricbeat.metric.critical.",
 			EC2_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.ec2.cloudwatch.metric.warning.",
 			EC2_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.ec2.cloudwatch.metric.critical.",
 			EC2_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.ec2.service.notification.period.";
@@ -201,16 +201,16 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static Set<EC2GraphiteMetric> getEC2GraphiteMetricsToMonitor() throws CandlestackPropertiesException {
-		Set<EC2GraphiteMetric> graphiteMetrics = new HashSet<>();
+	public static Set<EC2MetricbeatMetric> getEC2MetricbeatMetricsToMonitor() throws CandlestackPropertiesException {
+		Set<EC2MetricbeatMetric> metricbeatMetrics = new HashSet<>();
 		try {
-			for ( String metric : getSetProperty( EC2_GRAPHITE_METRICS_MONITOR, true ) ) {
-				graphiteMetrics.add( EC2GraphiteMetric.valueOf( metric ) );
+			for ( String metric : getSetProperty( EC2_METRICBEAT_METRICS_MONITOR, true ) ) {
+				metricbeatMetrics.add( EC2MetricbeatMetric.valueOf( metric ) );
 			}
 		} catch ( IllegalArgumentException e ) {
-			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_GRAPHITE_METRICS_MONITOR + "]" );
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + EC2_METRICBEAT_METRICS_MONITOR + "]" );
 		}
-		return graphiteMetrics;
+		return metricbeatMetrics;
 	}
 
 
@@ -240,13 +240,13 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	}
 
 
-	public static long getEC2GraphiteMetricWarningLevel( String instanceId, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_GRAPHITE_METRIC_WARNING_PREFIX, metric.name(), instanceId );
+	public static long getEC2MetricbeatMetricWarningLevel( String instanceId, EC2MetricbeatMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_METRICBEAT_METRIC_WARNING_PREFIX, metric.name(), instanceId );
 	}
 
 
-	public static long getEC2GraphiteMetricCriticalLevel( String instanceId, EC2GraphiteMetric metric ) throws CandlestackPropertiesException {
-		return determineAlertValue( EC2_GRAPHITE_METRIC_CRITICAL_PREFIX, metric.name(), instanceId );
+	public static long getEC2MetricbeatMetricCriticalLevel( String instanceId, EC2MetricbeatMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( EC2_METRICBEAT_METRIC_CRITICAL_PREFIX, metric.name(), instanceId );
 	}
 
 

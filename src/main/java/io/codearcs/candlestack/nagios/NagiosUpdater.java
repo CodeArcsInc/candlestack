@@ -42,6 +42,7 @@ public class NagiosUpdater extends Thread {
 	private static final String PROPERTY_KEY_SLEEP_INTERVAL = "nagios.updater.sleep.interval.min",
 			PROPERTY_KEY_OBJECT_DEFINITION_DIR = "nagios.object.definition.dir",
 			PROPERTY_KEY_OBJECT_DEFINITION_USER_TIMEPERIODS = "nagios.object.definition.user.timeperiods",
+			PROPERTY_KEY_OBJECT_DEFINITION_USER_CHECKS = "nagios.object.definition.user.checks",
 			PROPERTY_KEY_RESTART_CMD = "nagios.updater.restart.cmd";
 
 	/*
@@ -233,6 +234,18 @@ public class NagiosUpdater extends Thread {
 			}
 		}
 
+		// Copy the user checks object definition file if provided one
+		String userChecks = GlobalNagiosProperties.getStringProperty( PROPERTY_KEY_OBJECT_DEFINITION_USER_CHECKS, "" );
+		if ( !userChecks.isEmpty() ) {
+			File userChecksFile = new File( userChecks );
+			if ( userChecksFile.exists() ) {
+				try {
+					Files.copy( userChecksFile.toPath(), new File( staticObjectDefinitionDir, "user_checks.cfg" ).toPath(), StandardCopyOption.REPLACE_EXISTING );
+				} catch ( IOException e ) {
+					throw new CandlestackNagiosException( "Failed to copy user checks object definition file to static directory", e );
+				}
+			}
+		}
 	}
 
 

@@ -33,7 +33,7 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 
 	private Set<EC2CloudWatchMetric> ec2CloudWatchMetrics;
 
-	private Set<EC2GraphiteMetric> ec2GraphiteMetrics;
+	private Set<EC2MetricbeatMetric> ec2MetricbeatMetrics;
 
 	private long newResourceMonitorDelayMillis;
 
@@ -48,7 +48,7 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 		newResourceMonitorDelayMillis = TimeUnit.MINUTES.toMillis( GlobalAWSProperties.getEC2NewResourceMonitorDelay() );
 
 		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToMonitor();
-		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetricsToMonitor();
+		ec2MetricbeatMetrics = GlobalAWSProperties.getEC2MetricbeatMetricsToMonitor();
 
 		ec2Client = AmazonEC2ClientBuilder.standard().withRegion( GlobalAWSProperties.getRegion() ).build();
 
@@ -70,7 +70,7 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
@@ -88,7 +88,7 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			commands.add( metric.getMonitorCommand( relativePathToMonitorResource ) );
 		}
 
@@ -137,7 +137,7 @@ public class EC2HostMonitorLookup implements HostMonitorLookup {
 			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			host.addService( metric.getService( instance.getInstanceId(), contactGroups ) );
 		}
 

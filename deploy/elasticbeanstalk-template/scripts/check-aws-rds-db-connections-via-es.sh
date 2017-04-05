@@ -198,10 +198,8 @@ while read line; do
 	
 	if  check_exp "$metric_value <= $warning" ;then
 		log_msg "OK: Database Connections = $metric_value"
-
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
 		log_msg "WARNING: Database Connections = $metric_value"
-
 	elif check_exp "$metric_value > $critical"  ;then
 		log_msg "CRITICAL: Database Connections = $metric_value"
 	else 

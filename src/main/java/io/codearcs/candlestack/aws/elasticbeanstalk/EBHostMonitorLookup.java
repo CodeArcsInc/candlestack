@@ -21,7 +21,7 @@ import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.ScriptFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
-import io.codearcs.candlestack.aws.ec2.EC2GraphiteMetric;
+import io.codearcs.candlestack.aws.ec2.EC2MetricbeatMetric;
 import io.codearcs.candlestack.aws.ec2.EC2Util;
 import io.codearcs.candlestack.nagios.HostMonitorLookup;
 import io.codearcs.candlestack.nagios.object.commands.Command;
@@ -43,7 +43,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 
 	private Set<EC2CloudWatchMetric> ec2CloudWatchMetrics;
 
-	private Set<EC2GraphiteMetric> ec2GraphiteMetrics;
+	private Set<EC2MetricbeatMetric> ec2MetricbeatMetrics;
 
 	private Set<EBCloudWatchMetric> ebCloudWatchMetrics;
 
@@ -60,7 +60,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 		newResourceMonitorDelayMillis = TimeUnit.MINUTES.toMillis( GlobalAWSProperties.getEBNewResourceMonitorDelay() );
 
 		ec2CloudWatchMetrics = GlobalAWSProperties.getEC2CloudwatchMetricsToMonitor();
-		ec2GraphiteMetrics = GlobalAWSProperties.getEC2GraphiteMetricsToMonitor();
+		ec2MetricbeatMetrics = GlobalAWSProperties.getEC2MetricbeatMetricsToMonitor();
 		ebCloudWatchMetrics = GlobalAWSProperties.getEBCloudwatchMetricsToMonitor();
 
 		String region = GlobalAWSProperties.getRegion();
@@ -85,7 +85,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			resourceMap.put( metric.getScriptFileName(), ScriptFetcher.fetchInputStream( metric.getScriptFileName() ) );
 		}
 
@@ -107,7 +107,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			commands.add( metric.getMonitorCommand( EC2_COMMAND_SUFFIX, relativePathToMonitorResource ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			commands.add( metric.getMonitorCommand( EC2_COMMAND_SUFFIX, relativePathToMonitorResource ) );
 		}
 
@@ -186,7 +186,7 @@ public class EBHostMonitorLookup implements HostMonitorLookup {
 			host.addService( metric.getService( EC2_COMMAND_SUFFIX, notificationPeriod, instance.getInstanceId(), contactGroups ) );
 		}
 
-		for ( EC2GraphiteMetric metric : ec2GraphiteMetrics ) {
+		for ( EC2MetricbeatMetric metric : ec2MetricbeatMetrics ) {
 			host.addService( metric.getService( EC2_COMMAND_SUFFIX, notificationPeriod, instance.getInstanceId(), contactGroups ) );
 		}
 
