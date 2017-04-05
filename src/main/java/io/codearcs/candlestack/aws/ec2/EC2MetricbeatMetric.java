@@ -11,17 +11,27 @@ import io.codearcs.candlestack.nagios.object.services.Service;
 
 public enum EC2MetricbeatMetric implements AWSMetric {
 
+	CPUUtilization( "check-cpu-mb",
+			"check-aws-ec2-cpu-mb",
 			"check-aws-ec2-cpu-via-es-mb.sh",
 			"Checks to see if the EC2 instance is experiencing heavy CPU load. In the event an alert is triggered check the EC2 instance for processing consuming large amount of CPU or potentially a noisy neighbor stealing resources." ),
 
+	NetworkIn( "check-network-in-mb",
+			"check-aws-ec2-network-in-mb",
 			"check-aws-ec2-network-in-via-es-mb.sh",
 			"Checks to see if the EC2 instance has network traffice flowing into the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent other systems from connecting." ),
 
+	NetworkOut( "check-network-out-mb",
+			"check-aws-ec2-network-out-mb",
 			"check-aws-ec2-network-out-via-es-mb.sh",
 			"Checks to see if the EC2 instance has network traffice flowing out of the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent it from sending out data." ),
+	DiskUtilization( "check-disk-utilization-mb",
+			"check-aws-ec2-disk-utilization-mb",
 			"check-aws-ec2-disk-utilization-via-es-mb.sh",
 			"Checks to see if the EC2 instance is consuming a large amount of disk space. In the event an alert is triggered check the EC2 instance for potential issues resulting in large disk consumption." ),
 
+	FreeMemory( "check-free-memory-mb",
+			"check-aws-ec2-free-memory-mb",
 			"check-aws-ec2-free-memory-via-es-mb.sh",
 			"Checks to see if the EC2 instance is consuming a large amount of memory. In the event an alert is triggered check the EC2 instances for potential memory leaks." );
 
