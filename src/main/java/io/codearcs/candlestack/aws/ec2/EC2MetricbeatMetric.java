@@ -81,9 +81,9 @@ public enum EC2MetricbeatMetric implements AWSMetric {
 		long warning = GlobalAWSProperties.getEC2MetricbeatMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getEC2MetricbeatMetricCriticalLevel( instanceId, this );
 
-		String command = commandName + "!" + instanceId + "!" + warning + "!" + critical;
+		String command = commandName + commanNameSuffix + "!" + instanceId + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command + commanNameSuffix, notes, notificationPeriod, contactGroups );
+		return new Service( serviceName, instanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
 

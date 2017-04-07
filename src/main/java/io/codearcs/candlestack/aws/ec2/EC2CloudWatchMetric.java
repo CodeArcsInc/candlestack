@@ -91,9 +91,9 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 		long warning = GlobalAWSProperties.getEC2CloudWatchMetricWarningLevel( instanceId, this );
 		long critical = GlobalAWSProperties.getEC2CloudWatchMetricCriticalLevel( instanceId, this );
 
-		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
+		String command = commandName + commanNameSuffix + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 
-		return new Service( serviceName, instanceId, command + commanNameSuffix, notes, notificationPeriod, contactGroups );
+		return new Service( serviceName, instanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
 
