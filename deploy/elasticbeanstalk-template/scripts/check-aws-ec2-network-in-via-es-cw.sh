@@ -185,8 +185,6 @@ query=$(get_query $(get_epoch_in_ms 'now - 20 minute') $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
-input=$(clean_input "$input")
-
 test -z "$input" && {
 	log_msg "UNKNOWN: Plugin failed to retrieve input"
 	print_msg_and_exit

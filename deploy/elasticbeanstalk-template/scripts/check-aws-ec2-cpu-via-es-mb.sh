@@ -178,8 +178,6 @@ query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'no
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
-input=$(clean_input "$input")
-
 test -z "$input" && {
 	log_msg "UNKNOWN: Plugin failed to retrieve input"
 	print_msg_and_exit
@@ -205,6 +203,7 @@ elif check_exp "$cpuavg > $critical"  ;then
 	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
 else 
 	log_msg "UNKNOWN: Could not determine CPU utilization"
+	echo $input > /var/tmp/check-aws-ec2-cpu-via-es-mb-input.txt
 fi
 
 print_msg_and_exit

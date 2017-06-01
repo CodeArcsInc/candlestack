@@ -185,18 +185,23 @@ query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'no
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
-input=$(clean_input "$input")
-
 test -z "$input" && {
 	log_msg "UNKNOWN: Plugin failed to retrieve input"
 	print_msg_and_exit
 }
 
+
+isNumberRegEx='^[0-9]+$'
 counter=0
 healthtotal=0
 while read line; do
 	# This line creates 3 variables metric_name, metric_value and timestamp
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
+	# Checks to see if it is a number, if not then its scientific notation that needs converting
+	if ! [[ $metric_value =~ $isNumberRegEx ]] ; then
+		metric_value=$(printf "%f" "$metric_value")
+	fi
+	# Add to the running tallies
 	healthtotal=$((healthtotal+metric_value))
 	counter=$((counter+1))
 done < <( clean_input "$input")
@@ -210,6 +215,7 @@ elif check_exp "$healthavg > $critical"  ;then
 	log_msg "CRITICAL: Environment Health = average of $healthavg over $timeinterval"
 else 
 	log_msg "UNKNOWN: Could not determine environment health"
+	echo $input > /var/tmp/check-aws-eb-environment-health-via-es-input.txt
 fi
 
 print_msg_and_exit

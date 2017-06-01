@@ -185,8 +185,6 @@ query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'no
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
-input=$(clean_input "$input")
-
 test -z "$input" && {
 	log_msg "UNKNOWN: Plugin failed to retrieve input"
 	print_msg_and_exit
@@ -211,6 +209,7 @@ elif check_exp "$usedavg > $critical"  ;then
 	log_msg "CRITICAL: Disk Utilization = average of $usedavg% over $timeinterval"
 else 
 	log_msg "UNKNOWN: Could not determine disk utilization"
+	echo $input > /var/tmp/check-aws-ec2-disk-utilization-via-es-mb-input.txt
 fi
 
 print_msg_and_exit

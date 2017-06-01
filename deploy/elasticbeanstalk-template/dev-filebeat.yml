@@ -8,6 +8,10 @@ output:
     hosts: ["$TODO_LOGSTASH_HOST:5555"]
 shipper:
 logging:
+  level: info
+  to_files: true
   files:
+    path: /var/log/filebeat/
+    name: filebeat.log
     rotateeverybytes: 10485760 # = 10MB
-
+    keepfiles: 10

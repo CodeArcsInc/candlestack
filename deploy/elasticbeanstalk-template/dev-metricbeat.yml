@@ -1,0 +1,23 @@
+metricbeat.modules:
+- module: system
+  metricsets: ["cpu", "load", "memory", "network", "process"]
+  enabled: true
+  period: 30s
+  processes: ['.*']
+- module: system
+  metricsets: ["filesystem"]
+  enabled: true
+  period: 30s
+  filters:
+    - drop_event.when.regexp.mount_point: '^/(sys|cgroup|proc|dev|etc|host)($|/)'
+output.logstash:
+  enabled: true
+  hosts: ["$TODO_LOGSTASH_HOST:5555"]
+logging.level: info
+logging.to_files: true
+logging.to_syslog: false
+logging.files:
+  path: /var/log/metricbeat/
+  name: metricbeat.log
+  rotateeverybytes: 10485760 # = 10MB
+  keepfiles: 10

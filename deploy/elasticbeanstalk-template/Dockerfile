@@ -13,18 +13,30 @@ ADD apache2/ports.conf /etc/apache2/ports.conf
 RUN htpasswd -bc /opt/nagios/etc/htpasswd.users $TODO_NAGIOS_ADMIN $TODO_NAGIOS_PASSWORD &&\ 
 	chown nagios.nagios /opt/nagios/etc/htpasswd.users
 
+# Add the Candlestack files
 ADD candlestack /opt/candlestack
-
 ADD start-candlestack.sh /opt/
-
 ADD scripts /opt/scripts
 
+# Add the filebeat files
 ADD start-filebeat.sh /opt/
-
 ADD *-filebeat.yml /opt/filebeat/
 
+# Add the metricbeat files
+ADD start-metricbeat.sh /opt/
+ADD *-metricbeat.yml /opt/metricbeat/
+
+# Create log directories
+RUN mkdir /var/log/filebeat/ &&\
+	mkdir /var/log/metricbeat/ &&\
+	mkdir /var/log/candlestack/ &&\
+	mkdir /var/log/apache/ &&\
+	mkdir /var/log/supervisord/
+
+# Add the supervisord files
 ADD supervisord.conf /etc/supervisor/supervisord.conf
 
-EXPOSE 9090
 
+# Expose and start the container
+EXPOSE 9090
 CMD supervisord -c /etc/supervisor/supervisord.conf

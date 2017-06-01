@@ -1,5 +1,5 @@
 #! /bin/sh
 
-cfg="/opt/filebeat/${ENVIRONMENT}-filebeat.yml"
+CONFIG="/opt/filebeat/${ENVIRONMENT}-filebeat.yml"
 
-/opt/filebeat/filebeat -v -e -c $cfg
+/opt/filebeat/filebeat -c $CONFIG

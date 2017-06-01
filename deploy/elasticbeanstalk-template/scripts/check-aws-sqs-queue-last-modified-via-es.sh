@@ -185,8 +185,6 @@ query=$(get_query $(get_epoch_in_ms 'now - 10 minute') $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
-input=$(clean_input "$input")
-
 warningepoch=$(date -d "now - $warning minute" +%s)
 criticalepoch=$(date -d "now - $critical minute" +%s)
 
