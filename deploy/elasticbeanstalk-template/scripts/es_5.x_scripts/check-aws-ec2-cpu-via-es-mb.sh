@@ -47,7 +47,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.system.cpu.idle.pct] | @csv'
+			jq -r '.hits.hits[]._source | [.system.cpu.idle.pct,.system.cpu.cores] | @csv'
 }
 
 # This function returns epoch in ms from data_string
@@ -126,15 +126,17 @@ test -z "$input" && {
 
 counter=0
 cpuidletotal=0
+cpucores=1
 while read line; do
-	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
+	eval $(awk -F, '{printf "metric_value=%s metric_cores=%s\n",$1,$2}' <<< "$line")
 	cpuidletotal=$(echo "$cpuidletotal + $metric_value" | bc)
 	counter=$(echo "$counter + 1" | bc)
+	cpucores=$metric_cores
 done < <( clean_input "$input")
 
 cpuidleavg=$(echo "scale=4; $cpuidletotal / $counter" | bc)
 cpuidleavg=$(echo "scale=2; $cpuidleavg * 100" | bc)
-cpuavg=$(echo "100 - $cpuidleavg" | bc)
+cpuavg=$(echo "100 * $cpucores - $cpuidleavg" | bc)
 
 if  check_exp "$cpuavg <= $warning" ;then
 	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
