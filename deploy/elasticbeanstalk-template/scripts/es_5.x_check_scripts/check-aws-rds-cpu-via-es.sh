@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="20 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -15,7 +18,7 @@ function get_query {
 				"must": [
 					{ "range": { "@timestamp": { "gte" : "now-20m", "lt" :  "now" } } },
 					{ "term" : { "instanceId" : "$instanceid" } },
-					{ "term" : { "type" : "aws_ec2" } },
+					{ "term" : { "type" : "aws_rds" } },
 					{ "term" : { "metric_name" : "CPUUtilization" } }
 				]
 			}

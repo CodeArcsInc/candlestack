@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="10 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -15,7 +18,7 @@ function get_query {
 				"must": [
 					{ "range": { "@timestamp": { "gte" : "now-10m", "lt" :  "now" } } },
 					{ "term" : { "instance_id" : "$instanceid" } },
-					{ "term" : { "metricset.name" : "memory" } }
+					{ "term" : { "metricset.name" : "cpu" } }
 				]
 			}
 		},
@@ -47,7 +50,15 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.system.memory.free]|@csv'
+			jq -r '.hits.hits[]._source | [.system.cpu.idle.pct,.system.cpu.cores] | @csv'
+}
+
+# This function returns epoch in ms from data_string
+# Example: get_epoch_in_ms 'now - 10 minutes'
+function get_epoch_in_ms {
+	# Here we just append 3 zeros epoch in seconds
+	local data_string="$1"
+	echo $(date -d "$data_string" +%s)000
 }
 
 function clean_input {
@@ -106,6 +117,7 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
+
 query=$(get_query)
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
@@ -115,31 +127,29 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
-isNumberRegEx='^[0-9]+$'
 counter=0
-memoryfreetotal=0
+cpuidletotal=0
+cpucores=1
 while read line; do
-	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
-	# Checks to see if it is a number, if not then its scientific notation that needs converting
-	if ! [[ $metric_value =~ $isNumberRegEx ]] ; then
-		metric_value=$(printf "%f" "$metric_value")
-	fi
-	memoryfreetotal=$(echo "$memoryfreetotal + $metric_value" | bc)
+	eval $(awk -F, '{printf "metric_value=%s metric_cores=%s\n",$1,$2}' <<< "$line")
+	cpuidletotal=$(echo "$cpuidletotal + $metric_value" | bc)
 	counter=$(echo "$counter + 1" | bc)
+	cpucores=$metric_cores
 done < <( clean_input "$input")
 
-memoryfreeavg=$(echo "$memoryfreetotal / $counter" | bc)
-memoryfreeavgmb=$(echo "$memoryfreeavg / 1048576" | bc)
+cpuidleavg=$(echo "scale=4; $cpuidletotal / $counter" | bc)
+cpuidleavg=$(echo "scale=2; $cpuidleavg * 100" | bc)
+cpuavg=$(echo "100 * $cpucores - $cpuidleavg" | bc)
 
-if  check_exp "$memoryfreeavg > $warning" ;then
-	log_msg "OK: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
-elif check_exp "$memoryfreeavg <= $warning && $memoryfreeavg > $critical" ;then
-	log_msg "WARNING: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
-elif check_exp "$memoryfreeavg <= $critical"  ;then
-	log_msg "CRITICAL: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
+if  check_exp "$cpuavg <= $warning" ;then
+	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
+	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $critical"  ;then
+	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine amount of memory free - counter : $counter - total : $memoryfreetotal - avg : $memoryfreeavg - avgmb : $memoryfreeavgmb"
-	echo $input > /var/tmp/check-aws-ec2-free-memory-via-es-mb-input.txt
+	log_msg "UNKNOWN: Could not determine CPU utilization"
+	echo $input > /var/tmp/check-aws-ec2-cpu-via-es-mb-input.txt
 fi
 
 print_msg_and_exit

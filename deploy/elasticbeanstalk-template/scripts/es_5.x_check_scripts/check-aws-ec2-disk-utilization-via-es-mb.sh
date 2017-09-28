@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="10 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF

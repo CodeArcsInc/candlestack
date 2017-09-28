@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="10 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -15,8 +18,7 @@ function get_query {
 				"must": [
 					{ "range": { "@timestamp": { "gte" : "now-10m", "lt" :  "now" } } },
 					{ "term" : { "instance_id" : "$instanceid" } },
-					{ "term" : { "metricset.name" : "network" } },
-					{ "term" : { "system.network.name" : "eth0" } }
+					{ "term" : { "metricset.name" : "memory" } }
 				]
 			}
 		},
@@ -48,7 +50,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.system.network.in.bytes]|@csv'
+			jq -r '.hits.hits[]._source | [.system.memory.free]|@csv'
 }
 
 function clean_input {
@@ -107,7 +109,7 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
+query=$(get_query)
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -116,31 +118,31 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+isNumberRegEx='^[0-9]+$'
 counter=0
-networkinlast=0
-networkinfirst=0
+memoryfreetotal=0
 while read line; do
 	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
-	if check_exp "$counter == 0" ; then
-		networkinlast=$metric_value
-		networkinfirst=$metric_value
-	else
-		networkinfirst=$metric_value
+	# Checks to see if it is a number, if not then its scientific notation that needs converting
+	if ! [[ $metric_value =~ $isNumberRegEx ]] ; then
+		metric_value=$(printf "%f" "$metric_value")
 	fi
+	memoryfreetotal=$(echo "$memoryfreetotal + $metric_value" | bc)
 	counter=$(echo "$counter + 1" | bc)
 done < <( clean_input "$input")
 
-networkin=$(echo "$networkinlast - $networkinfirst" | bc)
-networkinmb=$(echo "$networkin / 1024" | bc)
+memoryfreeavg=$(echo "$memoryfreetotal / $counter" | bc)
+memoryfreeavgmb=$(echo "$memoryfreeavg / 1048576" | bc)
 
-if  check_exp "$networkin >= $warning" ;then
-	log_msg "OK: Network in = $networkinmb kb over $timeinterval"
-elif check_exp "$networkin < $warning && $networkin >= $critical" ;then
-	log_msg "WARNING: Network in = $networkinmb kb over $timeinterval"
-elif check_exp "$networkin < $critical"  ;then
-	log_msg "CRITICAL: Network in = $networkinmb kb over $timeinterval"
+if  check_exp "$memoryfreeavg > $warning" ;then
+	log_msg "OK: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
+elif check_exp "$memoryfreeavg <= $warning && $memoryfreeavg > $critical" ;then
+	log_msg "WARNING: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
+elif check_exp "$memoryfreeavg <= $critical"  ;then
+	log_msg "CRITICAL: Memory Free = average of $memoryfreeavgmb mb over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine network in"
+	log_msg "UNKNOWN: Could not determine amount of memory free - counter : $counter - total : $memoryfreetotal - avg : $memoryfreeavg - avgmb : $memoryfreeavgmb"
+	echo $input > /var/tmp/check-aws-ec2-free-memory-via-es-mb-input.txt
 fi
 
 print_msg_and_exit

@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="10 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -13,10 +16,10 @@ function get_query {
 		"query": {
 			"bool": {
 				"must": [
-					{ "range": { "@timestamp": { "gte" : "now-20m", "lt" :  "now" } } },
-					{ "term" : { "instanceId" : "$instanceid" } },
-					{ "term" : { "type" : "aws_rds" } },
-					{ "term" : { "metric_name" : "CPUUtilization" } }
+					{ "range": { "@timestamp": { "gte" : "now-10m", "lt" :  "now" } } },
+					{ "term" : { "instance_id" : "$instanceid" } },
+					{ "term" : { "metricset.name" : "network" } },
+					{ "term" : { "system.network.name" : "eth0" } }
 				]
 			}
 		},
@@ -35,11 +38,11 @@ function run_query {
 	local query="$1"
 	local today="$2"
 	local yesterday="$3"
-	local endpoint="https://$host/candlestack-$today,candlestack-$yesterday/_search?timeout=3m"
+	local endpoint="https://$host/metricbeat-$today,metricbeat-$yesterday/_search?timeout=3m"
 
-	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/candlestack-$today" -H "Authorization: Basic $authtoken")
+	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/metricbeat-$today" -H "Authorization: Basic $authtoken")
 	if [ "$statuscode" == "404" ];then
-		endpoint="https://$host/candlestack-$yesterday/_search?timeout=3m"
+		endpoint="https://$host/metricbeat-$yesterday/_search?timeout=3m"
 	fi
 
 	curl -sm 10 "$endpoint" \
@@ -48,7 +51,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
+			jq -r '.hits.hits[]._source | [.system.network.out.bytes]|@csv'
 }
 
 function clean_input {
@@ -117,23 +120,30 @@ test -z "$input" && {
 }
 
 counter=0
-cputotal=0
+networkoutlast=0
+networkoutfirst=0
 while read line; do
-	# This line creates 3 variables metric_name, metric_value and timestamp
-	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	cputotal=$((cputotal+metric_value))
-	counter=$((counter+1))
+	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
+	if check_exp "$counter == 0" ; then
+		networkoutlast=$metric_value
+		networkoutfirst=$metric_value
+	else
+		networkoutfirst=$metric_value
+	fi
+	counter=$(echo "$counter + 1" | bc)
 done < <( clean_input "$input")
 
-cpuavg=$((cputotal/counter))
-if  check_exp "$cpuavg <= $warning" ;then
-	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
-elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
-	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
-elif check_exp "$cpuavg > $critical"  ;then
-	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
+networkout=$(echo "$networkoutlast - $networkoutfirst" | bc)
+networkoutmb=$(echo "$networkout / 1024" | bc)
+
+if  check_exp "$networkout >= $warning" ;then
+	log_msg "OK: Network out = $networkoutmb kb over $timeinterval"
+elif check_exp "$networkout < $warning && $networkout >= $critical" ;then
+	log_msg "WARNING: Network out = $networkoutmb kb over $timeinterval"
+elif check_exp "$networkout < $critical"  ;then
+	log_msg "CRITICAL: Network out = $networkoutmb kb over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine CPU utilization"
+	log_msg "UNKNOWN: Could not determine network out"
 fi
 
 print_msg_and_exit

@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="10 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -48,7 +51,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.system.network.out.bytes]|@csv'
+			jq -r '.hits.hits[]._source | [.system.network.in.bytes]|@csv'
 }
 
 function clean_input {
@@ -107,7 +110,7 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-query=$(get_query)
+query=$(get_query $(get_epoch_in_ms "now - $timeinterval") $(get_epoch_in_ms 'now'))
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -117,30 +120,30 @@ test -z "$input" && {
 }
 
 counter=0
-networkoutlast=0
-networkoutfirst=0
+networkinlast=0
+networkinfirst=0
 while read line; do
 	eval $(awk -F, '{printf "metric_value=%s\n",$1}' <<< "$line")
 	if check_exp "$counter == 0" ; then
-		networkoutlast=$metric_value
-		networkoutfirst=$metric_value
+		networkinlast=$metric_value
+		networkinfirst=$metric_value
 	else
-		networkoutfirst=$metric_value
+		networkinfirst=$metric_value
 	fi
 	counter=$(echo "$counter + 1" | bc)
 done < <( clean_input "$input")
 
-networkout=$(echo "$networkoutlast - $networkoutfirst" | bc)
-networkoutmb=$(echo "$networkout / 1024" | bc)
+networkin=$(echo "$networkinlast - $networkinfirst" | bc)
+networkinmb=$(echo "$networkin / 1024" | bc)
 
-if  check_exp "$networkout >= $warning" ;then
-	log_msg "OK: Network out = $networkoutmb kb over $timeinterval"
-elif check_exp "$networkout < $warning && $networkout >= $critical" ;then
-	log_msg "WARNING: Network out = $networkoutmb kb over $timeinterval"
-elif check_exp "$networkout < $critical"  ;then
-	log_msg "CRITICAL: Network out = $networkoutmb kb over $timeinterval"
+if  check_exp "$networkin >= $warning" ;then
+	log_msg "OK: Network in = $networkinmb kb over $timeinterval"
+elif check_exp "$networkin < $warning && $networkin >= $critical" ;then
+	log_msg "WARNING: Network in = $networkinmb kb over $timeinterval"
+elif check_exp "$networkin < $critical"  ;then
+	log_msg "CRITICAL: Network in = $networkinmb kb over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine network out"
+	log_msg "UNKNOWN: Could not determine network in"
 fi
 
 print_msg_and_exit

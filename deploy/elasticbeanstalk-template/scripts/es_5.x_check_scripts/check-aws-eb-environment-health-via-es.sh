@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="20 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -13,9 +16,10 @@ function get_query {
 		"query": {
 			"bool": {
 				"must": [
-					{ "range": { "@timestamp": { "gte" : "now-10m", "lt" :  "now" } } },
-					{ "term" : { "instance_id" : "$instanceid" } },
-					{ "term" : { "metricset.name" : "cpu" } }
+					{ "range": { "@timestamp": { "gte" : "now-20m", "lt" :  "now" } } },
+					{ "term" : { "instanceId" : "$instanceid" } },
+					{ "term" : { "type" : "aws_eb" } },
+					{ "term" : { "metric_name" : "EnvironmentHealth" } }
 				]
 			}
 		},
@@ -34,11 +38,11 @@ function run_query {
 	local query="$1"
 	local today="$2"
 	local yesterday="$3"
-	local endpoint="https://$host/metricbeat-$today,metricbeat-$yesterday/_search?timeout=3m"
+	local endpoint="https://$host/candlestack-$today,candlestack-$yesterday/_search?timeout=3m"
 
-	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/metricbeat-$today" -H "Authorization: Basic $authtoken")
+	local statuscode=$(curl -s -o /dev/null -w "%{http_code}" "https://$host/candlestack-$today" -H "Authorization: Basic $authtoken")
 	if [ "$statuscode" == "404" ];then
-		endpoint="https://$host/metricbeat-$yesterday/_search?timeout=3m"
+		endpoint="https://$host/candlestack-$yesterday/_search?timeout=3m"
 	fi
 
 	curl -sm 10 "$endpoint" \
@@ -47,15 +51,7 @@ function run_query {
 		-H 'Accept: application/json, text/plain, */*' \
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
-			jq -r '.hits.hits[]._source | [.system.cpu.idle.pct,.system.cpu.cores] | @csv'
-}
-
-# This function returns epoch in ms from data_string
-# Example: get_epoch_in_ms 'now - 10 minutes'
-function get_epoch_in_ms {
-	# Here we just append 3 zeros epoch in seconds
-	local data_string="$1"
-	echo $(date -d "$data_string" +%s)000
+			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
 }
 
 function clean_input {
@@ -114,7 +110,6 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
 query=$(get_query)
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
@@ -124,29 +119,32 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
+
+isNumberRegEx='^[0-9]+$'
 counter=0
-cpuidletotal=0
-cpucores=1
+healthtotal=0
 while read line; do
-	eval $(awk -F, '{printf "metric_value=%s metric_cores=%s\n",$1,$2}' <<< "$line")
-	cpuidletotal=$(echo "$cpuidletotal + $metric_value" | bc)
-	counter=$(echo "$counter + 1" | bc)
-	cpucores=$metric_cores
+	# This line creates 3 variables metric_name, metric_value and timestamp
+	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
+	# Checks to see if it is a number, if not then its scientific notation that needs converting
+	if ! [[ $metric_value =~ $isNumberRegEx ]] ; then
+		metric_value=$(printf "%f" "$metric_value")
+	fi
+	# Add to the running tallies
+	healthtotal=$((healthtotal+metric_value))
+	counter=$((counter+1))
 done < <( clean_input "$input")
 
-cpuidleavg=$(echo "scale=4; $cpuidletotal / $counter" | bc)
-cpuidleavg=$(echo "scale=2; $cpuidleavg * 100" | bc)
-cpuavg=$(echo "100 * $cpucores - $cpuidleavg" | bc)
-
-if  check_exp "$cpuavg <= $warning" ;then
-	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
-elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
-	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
-elif check_exp "$cpuavg > $critical"  ;then
-	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
+healthavg=$((healthtotal/counter))
+if  check_exp "$healthavg <= $warning" ;then
+	log_msg "OK: Environment Health = average of $healthavg over $timeinterval"
+elif check_exp "$healthavg > $warning && $healthavg <= $critical" ;then
+	log_msg "WARNING: Environment Health = average of $healthavg over $timeinterval"
+elif check_exp "$healthavg > $critical"  ;then
+	log_msg "CRITICAL: Environment Health = average of $healthavg over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine CPU utilization"
-	echo $input > /var/tmp/check-aws-ec2-cpu-via-es-mb-input.txt
+	log_msg "UNKNOWN: Could not determine environment health"
+	echo $input > /var/tmp/check-aws-eb-environment-health-via-es-input.txt
 fi
 
 print_msg_and_exit

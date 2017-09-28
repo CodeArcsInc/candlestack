@@ -6,6 +6,9 @@ instanceid=$3
 warning=$4
 critical=$5
 
+# Make sure this stays inline with the below get_query timestamp range
+timeinterval="20 minutes"
+
 # This function prints out an ES query
 function get_query {
 	cat <<-EOF
@@ -15,8 +18,8 @@ function get_query {
 				"must": [
 					{ "range": { "@timestamp": { "gte" : "now-20m", "lt" :  "now" } } },
 					{ "term" : { "instanceId" : "$instanceid" } },
-					{ "term" : { "type" : "aws_eb" } },
-					{ "term" : { "metric_name" : "EnvironmentHealth" } }
+					{ "term" : { "type" : "aws_ec2" } },
+					{ "term" : { "metric_name" : "CPUUtilization" } }
 				]
 			}
 		},
@@ -116,32 +119,24 @@ test -z "$input" && {
 	print_msg_and_exit
 }
 
-
-isNumberRegEx='^[0-9]+$'
 counter=0
-healthtotal=0
+cputotal=0
 while read line; do
 	# This line creates 3 variables metric_name, metric_value and timestamp
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
-	# Checks to see if it is a number, if not then its scientific notation that needs converting
-	if ! [[ $metric_value =~ $isNumberRegEx ]] ; then
-		metric_value=$(printf "%f" "$metric_value")
-	fi
-	# Add to the running tallies
-	healthtotal=$((healthtotal+metric_value))
+	cputotal=$((cputotal+metric_value))
 	counter=$((counter+1))
 done < <( clean_input "$input")
 
-healthavg=$((healthtotal/counter))
-if  check_exp "$healthavg <= $warning" ;then
-	log_msg "OK: Environment Health = average of $healthavg over $timeinterval"
-elif check_exp "$healthavg > $warning && $healthavg <= $critical" ;then
-	log_msg "WARNING: Environment Health = average of $healthavg over $timeinterval"
-elif check_exp "$healthavg > $critical"  ;then
-	log_msg "CRITICAL: Environment Health = average of $healthavg over $timeinterval"
+cpuavg=$((cputotal/counter))
+if  check_exp "$cpuavg <= $warning" ;then
+	log_msg "OK: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $warning && $cpuavg <= $critical" ;then
+	log_msg "WARNING: CPU Utilization = average of $cpuavg% over $timeinterval"
+elif check_exp "$cpuavg > $critical"  ;then
+	log_msg "CRITICAL: CPU Utilization = average of $cpuavg% over $timeinterval"
 else 
-	log_msg "UNKNOWN: Could not determine environment health"
-	echo $input > /var/tmp/check-aws-eb-environment-health-via-es-input.txt
+	log_msg "UNKNOWN: Could not determine CPU utilization"
 fi
 
 print_msg_and_exit
