@@ -20,7 +20,7 @@ function get_query {
 				]
 			}
 		},
-		"size": 500,
+		"size": 1,
 		"sort": [{
 			"@timestamp": {
 				"order": "desc"
