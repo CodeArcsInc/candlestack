@@ -2,8 +2,6 @@ package io.codearcs.candlestack.aws.sqs;
 
 import java.util.Set;
 
-import com.amazonaws.services.cloudwatch.model.Dimension;
-
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CloudWatchStatistic;
@@ -34,8 +32,7 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 			"Checks to see if the queue has messages that have been recently produced. In the event an alert is triggered ensure messages are being put on the queue and the relevant message producers are healthy." );
 
 
-	private static final String NAMESPACE = "AWS/SQS",
-			DIMENSION_KEY = "QueueName";
+	private static final String NAMESPACE = "AWS/SQS";
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
@@ -103,12 +100,6 @@ public enum SQSCloudWatchMetric implements CloudWatchMetric {
 	@Override
 	public String getNamespace() {
 		return NAMESPACE;
-	}
-
-
-	@Override
-	public Dimension getDimension( String dimensionValue ) {
-		return new Dimension().withName( DIMENSION_KEY ).withValue( dimensionValue );
 	}
 
 

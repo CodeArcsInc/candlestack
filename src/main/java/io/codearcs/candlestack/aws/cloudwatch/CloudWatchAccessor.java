@@ -9,7 +9,6 @@ import java.util.Map;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
-import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 
@@ -17,7 +16,6 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CandlestackAWSException;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
-import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 
 
 public class CloudWatchAccessor {
@@ -69,18 +67,18 @@ public class CloudWatchAccessor {
 	}
 
 
-	public void lookupAndSaveMetricData( CloudWatchMetric metric, String dimensionValue, String type ) throws CandlestackAWSException, CandlestackException {
+	public void lookupAndSaveMetricData( CloudWatchMetric metric, CloudWatchDimensions dimensions, String instanceId, String type ) throws CandlestackAWSException, CandlestackException {
 
-		String datapointDateMapKey = getDatapointDateMapKey( metric, dimensionValue );
+		String datapointDateMapKey = getDatapointDateMapKey( metric, instanceId );
 
 		// Determine the last time we fetched datapoints for this metric and dimension
 		Date lastDatapointDate = lastDatapointDateMap.get( datapointDateMapKey );
 		if ( lastDatapointDate == null ) {
-			lastDatapointDate = metricsReaderWriter.readMostRecentMetricDate( type, dimensionValue, metric.getName() );
+			lastDatapointDate = metricsReaderWriter.readMostRecentMetricDate( type, instanceId, metric.getName() );
 		}
 
 		// Build the request and execute it
-		GetMetricStatisticsRequest request = cloudWatchRequest( metric, dimensionValue, lastDatapointDate );
+		GetMetricStatisticsRequest request = cloudWatchRequest( metric, dimensions, lastDatapointDate );
 		GetMetricStatisticsResult result = cloudWatchClient.getMetricStatistics( request );
 
 		// Sort the datapoints in chronological order
@@ -93,7 +91,7 @@ public class CloudWatchAccessor {
 			// Only care about data points that have happened after the last one
 			if ( lastDatapointDate == null || datapoint.getTimestamp().after( lastDatapointDate ) ) {
 				lastDatapointDate = datapoint.getTimestamp();
-				metricsReaderWriter.writeMetric( type, dimensionValue, datapoint.getTimestamp(), metric.getName(), metric.getStatistic().getValueFromDatapoint( datapoint ) );
+				metricsReaderWriter.writeMetric( type, instanceId, datapoint.getTimestamp(), metric.getName(), metric.getStatistic().getValueFromDatapoint( datapoint ) );
 			}
 
 		}
@@ -109,7 +107,7 @@ public class CloudWatchAccessor {
 	}
 
 
-	private GetMetricStatisticsRequest cloudWatchRequest( CloudWatchMetric metric, String dimensionValue, Date lastDatapointDate ) {
+	private GetMetricStatisticsRequest cloudWatchRequest( CloudWatchMetric metric, CloudWatchDimensions dimensions, Date lastDatapointDate ) {
 
 		// Work out the start and end time
 		Date endDate = new Date();
@@ -126,26 +124,14 @@ public class CloudWatchAccessor {
 
 		}
 
-		// TODO this totally a hack to get this one metric to work since it requires the EngineName dimension to work, need to figure out a more long term solution
-		if ( metric instanceof RDSCloudWatchMetric && metric.equals( RDSCloudWatchMetric.VolumeBytesUsed ) ) {
-			return new GetMetricStatisticsRequest()
-					.withStartTime( startDate )
-					.withEndTime( endDate )
-					.withPeriod( requestPeriod )
-					.withNamespace( metric.getNamespace() )
-					.withStatistics( metric.getStatistic().name() )
-					.withDimensions( metric.getDimension( dimensionValue ), new Dimension().withName( "EngineName" ).withValue( "aurora" ) )
-					.withMetricName( metric.getName() );
-		} else {
-			return new GetMetricStatisticsRequest()
-					.withStartTime( startDate )
-					.withEndTime( endDate )
-					.withPeriod( requestPeriod )
-					.withNamespace( metric.getNamespace() )
-					.withStatistics( metric.getStatistic().name() )
-					.withDimensions( metric.getDimension( dimensionValue ) )
-					.withMetricName( metric.getName() );
-		}
+		return new GetMetricStatisticsRequest()
+				.withStartTime( startDate )
+				.withEndTime( endDate )
+				.withPeriod( requestPeriod )
+				.withNamespace( metric.getNamespace() )
+				.withStatistics( metric.getStatistic().name() )
+				.withDimensions( dimensions.getDimensions( metric ) )
+				.withMetricName( metric.getName() );
 	}
 
 

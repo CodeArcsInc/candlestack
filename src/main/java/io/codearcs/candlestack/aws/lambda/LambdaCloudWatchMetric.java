@@ -1,9 +1,6 @@
-package io.codearcs.candlestack.aws.elasticbeanstalk;
+package io.codearcs.candlestack.aws.lambda;
 
-import java.util.HashSet;
 import java.util.Set;
-
-import com.amazonaws.services.cloudwatch.model.Dimension;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
@@ -13,29 +10,49 @@ import io.codearcs.candlestack.aws.cloudwatch.CloudWatchMetric;
 import io.codearcs.candlestack.nagios.object.commands.Command;
 import io.codearcs.candlestack.nagios.object.services.Service;
 
+/**
+ * Defines the set of Lambda CloudWatch Metrics to collect.
+ * 
+ * @author Amanda
+ *
+ */
+public enum LambdaCloudWatchMetric implements CloudWatchMetric {
 
-public enum EBCloudWatchMetric implements CloudWatchMetric {
+	Invocations ( CloudWatchStatistic.Maximum,
+			"check-lambda-invocations",
+			"check-aws-lambda-invocations",
+			"check-aws-lambda-invocations-via-es-cw.sh",
+			"Checks to see if the Lambda function has been invoked recently." ),
 
-	EnvironmentHealth( CloudWatchStatistic.Maximum,
-			"check-environment-health",
-			"check-aws-eb-environment-health",
-			"check-aws-eb-environment-health-via-es.sh",
-			"Checks to see if the Elastic Beanstalk environemnt is unhealthy. In the event an alert is triggered check the Elastic Beanstalk environment for issues causing the instances to be considered unhealthy." );
+	Errors ( CloudWatchStatistic.Maximum,
+			"check-lambda-errors",
+			"check-aws-lambda-errors",
+			"check-aws-lambda-errors-via-es-cw.sh",
+			"Checks to se if the Lambda function has errored" ),
 
-	private static final String NAMESPACE = "AWS/ElasticBeanstalk";
+	Duration ( CloudWatchStatistic.Maximum,
+			"check-lambda-duration",
+			"check-aws-lambda-duration",
+			"check-aws-lambda-duration-via-es-cw.sh",
+			"Checks the duration of the Lambda function. " );
+
+	
+	// Lambda Namespace
+	private static final String NAMESPACE = "AWS/Lambda";
+	
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;
 
-
-	private EBCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, String notes ) {
+	
+	private LambdaCloudWatchMetric( CloudWatchStatistic statistic, String serviceName, String commandName, String scriptFileName, String notes ) {
 		this.statistic = statistic;
 		this.serviceName = serviceName;
 		this.commandName = commandName;
 		this.scriptFileName = scriptFileName;
 		this.notes = notes;
-
+		
 		try {
 			logsHost = GlobalAWSProperties.getLogsHost();
 			logsAuthToken = GlobalAWSProperties.getLogsAuthToken();
@@ -44,48 +61,43 @@ public enum EBCloudWatchMetric implements CloudWatchMetric {
 		}
 	}
 
-
-	@Override
-	public CloudWatchStatistic getStatistic() {
-		return statistic;
-	}
-
-
+	
 	@Override
 	public String getServiceName() {
 		return serviceName;
 	}
-
 
 	@Override
 	public String getCommandName() {
 		return commandName;
 	}
 
-
 	@Override
 	public String getScriptFileName() {
 		return scriptFileName;
 	}
 
-
 	@Override
-	public Service getService( String instanceId, Set<String> contactGroups ) throws CandlestackPropertiesException {
-		long warning = GlobalAWSProperties.getEBCloudWatchMetricWarningLevel( instanceId, this );
-		long critical = GlobalAWSProperties.getEBCloudWatchMetricCriticalLevel( instanceId, this );
+	public Service getService(String instanceId, Set<String> contactGroups) throws CandlestackPropertiesException {
+		
+		long warning = GlobalAWSProperties.getLambdaCloudWatchMetricWarningLevel( instanceId, this );
+		long critical = GlobalAWSProperties.getLambdaCloudWatchMetricCriticalLevel( instanceId, this );
 		String command = commandName + "!" + MetricsReaderWriter.sanitizeString( instanceId ) + "!" + warning + "!" + critical;
 
-		String notificationPeriod = GlobalAWSProperties.getEBServiceNotificationPeriod( instanceId );
+		String notificationPeriod = GlobalAWSProperties.getLambdaServiceNotificationPeriod( instanceId );
 
 		return new Service( serviceName, instanceId, command, notes, notificationPeriod, contactGroups );
 	}
 
-
 	@Override
-	public Command getMonitorCommand( String relativePathToMonitorResource ) {
+	public Command getMonitorCommand(String relativePathToMonitorResource) {
 		return new Command( commandName, relativePathToMonitorResource + scriptFileName + " " + logsHost + " " + logsAuthToken + " $ARG1$ $ARG2$ $ARG3$" );
 	}
 
+	@Override
+	public CloudWatchStatistic getStatistic() {
+		return statistic;
+	}
 
 	@Override
 	public String getNamespace() {
@@ -97,6 +109,5 @@ public enum EBCloudWatchMetric implements CloudWatchMetric {
 	public String getName() {
 		return name();
 	}
-
 
 }

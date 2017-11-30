@@ -72,10 +72,8 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			false );
 
 
-	private static final String NAMESPACE = "AWS/RDS",
-			INSTANCE_DIMENSION_KEY = "DBInstanceIdentifier",
-			CLUSTER_DIMENSION_KEY = "DbClusterIdentifier";
-
+	private static final String NAMESPACE = "AWS/RDS";
+	
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;
@@ -163,12 +161,6 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 	@Override
 	public String getNamespace() {
 		return NAMESPACE;
-	}
-
-
-	@Override
-	public Dimension getDimension( String dimensionValue ) {
-		return new Dimension().withName( clusterOnly ? CLUSTER_DIMENSION_KEY : INSTANCE_DIMENSION_KEY ).withValue( dimensionValue );
 	}
 
 

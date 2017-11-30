@@ -68,10 +68,13 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 			if ( !RDSUtil.isDBInstanceEligible( dbClusterId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
 				continue;
 			}
+			
+			RDSCloudWatchClusterDimensions dimensions = new RDSCloudWatchClusterDimensions();
+			dimensions.setClusterDimension( dbClusterId );
 
 			for ( RDSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
 				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && cloudWatchMetric.isClusterOnlyMetric() ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbClusterId, RDSUtil.TYPE_NAME );
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dimensions, dbClusterId, RDSUtil.TYPE_NAME );
 				}
 			}
 
@@ -91,9 +94,12 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 				continue;
 			}
 
+			RDSCloudWatchInstanceDimensions dimensions = new RDSCloudWatchInstanceDimensions();
+			dimensions.setInstanceDimension( dbInstanceId );
+			
 			for ( RDSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
 				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && !cloudWatchMetric.isClusterOnlyMetric() && ( !cloudWatchMetric.isReplicaOnlyMetric() || replicaInstances.contains( dbInstanceId ) ) ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbInstanceId, RDSUtil.TYPE_NAME );
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dimensions, dbInstanceId, RDSUtil.TYPE_NAME );
 				}
 			}
 

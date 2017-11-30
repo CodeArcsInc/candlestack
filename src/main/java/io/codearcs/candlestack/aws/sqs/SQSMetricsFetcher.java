@@ -83,11 +83,16 @@ public class SQSMetricsFetcher extends MetricsFetcher {
 					}
 
 				}
-
+				
 				// Check to see if we should fetch some CloudWatch metrics
 				if ( !cloudWatchMetrics.isEmpty() ) {
+					
+					// Create the Dimensions Required
+					SQSCloudWatchDimensions dimensions = new SQSCloudWatchDimensions();
+					dimensions.setQueueNameDimension( queueName );
+					
 					for ( SQSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
-						cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, queueName, SQSUtil.TYPE_NAME );
+						cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dimensions, queueName, SQSUtil.TYPE_NAME );
 					}
 				}
 			}

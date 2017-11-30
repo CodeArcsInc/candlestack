@@ -18,6 +18,7 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.MetricsFetcher;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
 import io.codearcs.candlestack.aws.cloudwatch.CloudWatchAccessor;
+import io.codearcs.candlestack.aws.ec2.EC2CloudWatchDimensions;
 import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
 import io.codearcs.candlestack.aws.ec2.EC2Util;
 
@@ -66,15 +67,18 @@ public class EBMetricsFetcher extends MetricsFetcher {
 
 			// Look through the environments for eligible ones
 			for ( EnvironmentDescription environment : beanstalkClient.describeEnvironments().getEnvironments() ) {
-
+				
 				// Skip over ineligible environments
 				if ( !EBUtil.isEnvironmentEligible( environment, environmentNamePrefix, environmentNameRegex ) ) {
 					continue;
 				}
 
+				EBCloudWatchDimensions ebdimensions = new EBCloudWatchDimensions();
+				ebdimensions.setEnvironmentNameDimension( environment.getEnvironmentName() );
+
 				// Retrieve the EB cloud watch metrics
 				for ( EBCloudWatchMetric cloudWatchMetric : ebCloudWatchMetrics ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, environment.getEnvironmentName(), EBUtil.TYPE_NAME );
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, ebdimensions, environment.getEnvironmentName(), EBUtil.TYPE_NAME );
 				}
 
 				// For each instance fetch the ec2 cloud watch metrics
@@ -82,8 +86,10 @@ public class EBMetricsFetcher extends MetricsFetcher {
 				if ( instances != null ) {
 					for ( Instance instance : instances ) {
 						String instanceId = instance.getInstanceId();
+						EC2CloudWatchDimensions ec2dimensions = new EC2CloudWatchDimensions();
+						ec2dimensions.setInstanceIdDimension( instanceId );
 						for ( EC2CloudWatchMetric cloudWatchMetric : ec2CloudWatchMetrics ) {
-							cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, instanceId, EC2Util.TYPE_NAME );
+							cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, ec2dimensions, instanceId, EC2Util.TYPE_NAME );
 						}
 					}
 				}

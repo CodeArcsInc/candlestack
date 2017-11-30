@@ -1,5 +1,6 @@
 package io.codearcs.candlestack.aws.ec2;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -33,8 +34,7 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 			"check-aws-ec2-network-out-via-es-cw.sh",
 			"Checks to see if the EC2 instance has network traffice flowing out of the system. In the event an alert is triggered check the EC2 instance for network issues that would prevent it from sending out data." );
 
-	private static final String NAMESPACE = "AWS/EC2",
-			DIMENSION_KEY = "InstanceId";
+	private static final String NAMESPACE = "AWS/EC2";
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
@@ -112,13 +112,6 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 	public String getNamespace() {
 		return NAMESPACE;
 	}
-
-
-	@Override
-	public Dimension getDimension( String dimensionValue ) {
-		return new Dimension().withName( DIMENSION_KEY ).withValue( dimensionValue );
-	}
-
 
 	@Override
 	public String getName() {
