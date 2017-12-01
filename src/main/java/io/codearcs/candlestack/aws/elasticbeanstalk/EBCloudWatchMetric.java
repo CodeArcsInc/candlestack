@@ -1,9 +1,6 @@
 package io.codearcs.candlestack.aws.elasticbeanstalk;
 
-import java.util.HashSet;
 import java.util.Set;
-
-import com.amazonaws.services.cloudwatch.model.Dimension;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;

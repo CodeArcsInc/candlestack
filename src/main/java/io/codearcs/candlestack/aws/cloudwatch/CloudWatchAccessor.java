@@ -130,7 +130,7 @@ public class CloudWatchAccessor {
 				.withPeriod( requestPeriod )
 				.withNamespace( metric.getNamespace() )
 				.withStatistics( metric.getStatistic().name() )
-				.withDimensions( dimensions.getDimensions( metric ) )
+				.withDimensions( dimensions.getDimensions() )
 				.withMetricName( metric.getName() );
 	}
 

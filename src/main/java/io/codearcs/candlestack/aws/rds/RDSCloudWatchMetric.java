@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.amazonaws.services.cloudwatch.model.Dimension;
-
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CloudWatchStatistic;
@@ -73,7 +71,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 
 
 	private static final String NAMESPACE = "AWS/RDS";
-	
+
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
 	private CloudWatchStatistic statistic;

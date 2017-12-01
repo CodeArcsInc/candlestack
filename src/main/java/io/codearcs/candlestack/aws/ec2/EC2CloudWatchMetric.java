@@ -1,9 +1,7 @@
 package io.codearcs.candlestack.aws.ec2;
 
-import java.util.HashSet;
-import java.util.Set;
 
-import com.amazonaws.services.cloudwatch.model.Dimension;
+import java.util.Set;
 
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
@@ -112,6 +110,7 @@ public enum EC2CloudWatchMetric implements CloudWatchMetric {
 	public String getNamespace() {
 		return NAMESPACE;
 	}
+
 
 	@Override
 	public String getName() {
