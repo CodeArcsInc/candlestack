@@ -6,91 +6,26 @@ instanceid=$3
 warning=$4
 critical=$5
 
-# This function prints out an ES query accepting 2 parameters:
-# $1 = from (time in ms since epoch)
-# $2 = to (time in ms since epoch)
-#  example: query=$(get_query $(get_epoch_in_ms 'now - 1 minute') $(get_epoch_in_ms 'now'))
+# This function prints out an ES query
 function get_query {
-	local from="$1"
-	local to="$2"
-
 	cat <<-EOF
 	{
-	  "query": {
-		"filtered": {
-		  "query": {
+		"query": {
 			"bool": {
-			  "should": [
-				{
-				  "query_string": {
-					"query": "*"
-				  }
-				}
-			  ]
+				"must": [
+					{ "range": { "@timestamp": { "gte" : "now-20m", "lt" :  "now" } } },
+					{ "term" : { "instanceId" : "$instanceid" } },
+					{ "term" : { "type" : "aws_lambda" } },
+					{ "term" : { "metric_name" : "Duration" } }
+				]
 			}
-		  },
-		  "filter": {
-			"bool": {
-			  "must": [
-				{
-				  "range": {
-					"@timestamp": {
-					  "from": $from,
-					  "to": $to
-					}
-				  }
-				},
-				{
-				  "fquery": {
-					"query": {
-					  "query_string": {
-						"query": "type:(\"aws_lambda\")"
-					  }
-					}
-				  }
-				},
-				{
-				  "fquery": {
-					"query": {
-					  "query_string": {
-						"query": "metric_name:(\"Errors\")"
-					  }
-					}
-				  }
-				},
-				{
-				  "fquery": {
-					"query": {
-					  "query_string": {
-						"query": "instanceId:(\"$instanceid\")"
-					  }
-					}
-				  }
-				}
-			  ]
+		},
+		"size": 500,
+		"sort": [{
+			"@timestamp": {
+				"order": "desc"
 			}
-		  }
-		}
-	  },
-	  "highlight": {
-		"fields": {},
-		"fragment_size": 2147483647,
-		"pre_tags": [
-		  "@start-highlight@"
-		],
-		"post_tags": [
-		  "@end-highlight@"
-		]
-	  },
-	  "size": 1,
-	  "sort": [
-		{
-		  "@timestamp": {
-			"order": "desc",
-			"ignore_unmapped": true
-		  }
-		}
-	  ]
+		}]
 	}
 	EOF
 }
@@ -114,14 +49,6 @@ function run_query {
 		--data-binary @- <<< "$query" |
 			# Get the result in CSV
 			jq -r '.hits.hits[]._source | [.metric_name,.metric_value,.timestamp]|@csv'
-}
-
-# This function returns epoch in ms from data_string
-# Example: get_epoch_in_ms 'now - 10 minutes'
-function get_epoch_in_ms {
-	# Here we just append 3 zeros epoch in seconds
-	local data_string="$1"
-	echo $(date -d "$data_string" +%s)000
 }
 
 function clean_input {
@@ -180,8 +107,7 @@ function check_exp {
 	test "$result" -eq 1 
 }
 
-
-query=$(get_query $(get_epoch_in_ms 'now - 10 minute') $(get_epoch_in_ms 'now'))
+query=$(get_query)
 
 input=$(run_query "$query" $(date +"%Y.%m.%d") $(date --date="yesterday" +"%Y.%m.%d"))
 
@@ -195,13 +121,13 @@ while read line; do
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
 	
 	if  check_exp "$metric_value <= $warning" ;then
-		log_msg "OK: Function Errors = $metric_value"
+		log_msg "OK: Function Duration = $metric_value ms"
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
-		log_msg "WARNING: Function Errors = $metric_value"
+		log_msg "WARNING: Function Duration = $metric_value ms"
 	elif check_exp "$metric_value > $critical"  ;then
-		log_msg "CRITICAL: Function Errors = $metric_value"
+		log_msg "CRITICAL: Function Duration = $metric_value ms"
 	else 
-		log_msg "UNKNOWN: Could not determine lambda errors"
+		log_msg "UNKNOWN: Could not determine function duration"
 	fi
 	
 done < <( clean_input "$input")

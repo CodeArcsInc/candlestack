@@ -195,13 +195,13 @@ while read line; do
 	eval $(awk -F, '{printf "metric_name=%s metric_value=%s timestamp=%s\n",$1,$2,$3}' <<< "$line")
 	
 	if  check_exp "$metric_value <= $warning" ;then
-		log_msg "OK: Last Modified = $metric_value ms"
+		log_msg "OK: Function Invocations = $metric_value"
 	elif check_exp "$metric_value > $warning && $metric_value <= $critical" ;then
-		log_msg "WARNING: Last Modified = $metric_value ms"
+		log_msg "WARNING: Function Invocations = $metric_value"
 	elif check_exp "$metric_value > $critical"  ;then
-		log_msg "CRITICAL: Last Modified = $metric_value ms"
+		log_msg "CRITICAL: Function Invocations = $metric_value"
 	else 
-		log_msg "UNKNOWN: Could not determine last modified"
+		log_msg "UNKNOWN: Could not determine lambda invocations"
 	fi
 	
 done < <( clean_input "$input")

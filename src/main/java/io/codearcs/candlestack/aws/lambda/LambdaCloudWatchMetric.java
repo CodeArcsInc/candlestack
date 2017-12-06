@@ -22,19 +22,19 @@ public enum LambdaCloudWatchMetric implements CloudWatchMetric {
 			"check-lambda-invocations",
 			"check-aws-lambda-invocations",
 			"check-aws-lambda-invocations-via-es-cw.sh",
-			"Checks to see if the Lambda function has been invoked recently." ),
+			"Checks to see if the Lambda function has been invoked at least a minimum number of times." ),
 
 	Errors ( CloudWatchStatistic.Maximum,
 			"check-lambda-errors",
 			"check-aws-lambda-errors",
 			"check-aws-lambda-errors-via-es-cw.sh",
-			"Checks to se if the Lambda function has errored" ),
+			"Checks to se if the Lambda function has generated more errors than expected" ),
 
 	Duration ( CloudWatchStatistic.Maximum,
 			"check-lambda-duration",
 			"check-aws-lambda-duration",
 			"check-aws-lambda-duration-via-es-cw.sh",
-			"Checks the duration of the Lambda function. " );
+			"Checks that the Lambda function has not taken longer than expected to execute. " );
 
 	
 	// Lambda Namespace
