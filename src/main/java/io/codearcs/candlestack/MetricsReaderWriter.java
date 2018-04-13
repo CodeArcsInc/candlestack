@@ -43,7 +43,7 @@ public class MetricsReaderWriter {
 			METRIC_VALUE_KEY = "metric_value";
 
 	private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat( "yyyy_MM_dd" ),
-			METRIC_DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" );
+			METRIC_DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSXXX" );
 
 
 	private static MetricsReaderWriter instance = null;

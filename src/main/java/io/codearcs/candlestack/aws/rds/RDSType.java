@@ -5,6 +5,7 @@ public enum RDSType {
 
 	UNSUPPORTED,
 	AURORA,
+	AURORA_MYSQL,
 	MARIADB;
 
 
@@ -12,7 +13,7 @@ public enum RDSType {
 		RDSType result = RDSType.UNSUPPORTED;
 
 		if ( rdsEngine != null ) {
-			String cleanRDSEngine = rdsEngine.trim();
+			String cleanRDSEngine = rdsEngine.trim().replace( "-", "_" );
 			for ( RDSType type : values() ) {
 				if ( type.name().equalsIgnoreCase( cleanRDSEngine ) ) {
 					result = type;
