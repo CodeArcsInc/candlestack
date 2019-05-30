@@ -17,6 +17,8 @@ import io.codearcs.candlestack.aws.ec2.EC2HostMonitorLookup;
 import io.codearcs.candlestack.aws.ec2.EC2MetricsFetcher;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBHostMonitorLookup;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBMetricsFetcher;
+import io.codearcs.candlestack.aws.lambda.LambdaHostMonitorLookup;
+import io.codearcs.candlestack.aws.lambda.LambdaMetricsFetcher;
 import io.codearcs.candlestack.aws.rds.RDSHostMonitorLookup;
 import io.codearcs.candlestack.aws.rds.RDSMetricsFetcher;
 import io.codearcs.candlestack.aws.s3.S3HostMonitorLookup;
@@ -81,6 +83,12 @@ public class Candlestack {
 			LOGGER.info( "Candlestack will monitor S3" );
 			metricsFetchers.add( new S3MetricsFetcher() );
 			hostMonitorLookups.add( new S3HostMonitorLookup( contactGroups ) );
+		}
+
+		if ( GlobalAWSProperties.isLambdaEnabled() ) {
+			LOGGER.info( "Candlestack will monitor Lambda" );
+			metricsFetchers.add( new LambdaMetricsFetcher() );
+			hostMonitorLookups.add( new LambdaHostMonitorLookup( contactGroups ) );
 		}
 
 		nagiosUpdater = new NagiosUpdater( hostMonitorLookups );

@@ -35,7 +35,7 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 	private AmazonRDS rdsClient;
 
-	private String dbInstancePrefix, dbInstanceRegex;
+	private String dbClusterPrefix, dbClusterRegex, dbInstancePrefix, dbInstanceRegex;
 
 	private long newResourceMonitorDelayMillis;
 
@@ -44,6 +44,8 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 
 		this.contactGroups = contactGroups;
 
+		dbClusterPrefix = GlobalAWSProperties.getRDSDBClusterPrefix();
+		dbClusterRegex = GlobalAWSProperties.getRDSDBClusterRegex();
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
 		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
@@ -88,24 +90,20 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 		// Initialize the host groups array
 		List<HostGroup> hostGroups = new ArrayList<>();
 
-		// Check for clusters and create a hostgroup for them
-		Map<String, HostGroup> clusterGroups = lookupClusterGroups();
-
-		// Create a host group for non clustered instances
-		HostGroup nonClusterHostGroup = new HostGroup( "aws_rds_non_cluster", "AWS RDS Non-Clustered Instances" );
+		// Check for clusters and create host groups for them
+		hostGroups.addAll( lookupClusterGroups() );
 
 		// Figure out the minimum launch age for the instance to monitored
 		Date minLaunchAge = new Date( System.currentTimeMillis() - newResourceMonitorDelayMillis );
 
-		// Get the DB instances and add them to the correct host group
-		Set<String> replicaInstances = RDSUtil.getReplicaInstances( rdsClient );
+		// Get the DB instances and see if any of them are not part of a cluster but should be monitored
+		HostGroup nonClusterHostGroup = new HostGroup( "aws_rds_non_cluster", "AWS RDS Non-Clustered Instances" );
 		DescribeDBInstancesResult dbInstanceResults = rdsClient.describeDBInstances();
 		for ( DBInstance dbInstance : dbInstanceResults.getDBInstances() ) {
 
 			// Make sure the DB instance is eligible
-			String dbInstanceId = dbInstance.getDBInstanceIdentifier();
 			RDSType rdsType = RDSType.getTypeFromEngine( dbInstance.getEngine() );
-			if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
+			if ( !RDSUtil.isDBInstanceEligible( dbInstance, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
 				continue;
 			}
 
@@ -114,14 +112,8 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 				continue;
 			}
 
-			// Figure out the correct host group
-			HostGroup applicableHostGroup = clusterGroups.get( dbInstanceId );
-			if ( applicableHostGroup == null ) {
-				applicableHostGroup = nonClusterHostGroup;
-			}
-
 			// Add the instance to the host group
-			applicableHostGroup.addHost( createHostForDBInstance( dbInstance, rdsType, replicaInstances.contains( dbInstance.getDBInstanceIdentifier() ) ) );
+			nonClusterHostGroup.addHost( createHostForDBInstance( dbInstance, rdsType ) );
 
 		}
 
@@ -130,34 +122,31 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 			hostGroups.add( nonClusterHostGroup );
 		}
 
-		// Check the cluster groups to see if it has any instances
-		for ( HostGroup clusterGroup : clusterGroups.values() ) {
-			if ( clusterGroup.getHosts().size() > 1 ) {
-				hostGroups.add( clusterGroup );
-			} else if ( clusterGroup.getHosts().size() == 1 && !clusterGroup.getHosts().get( 0 ).getName().equals( clusterGroup.getName() ) ) {
-				hostGroups.add( clusterGroup );
-			}
-		}
-
 		return hostGroups;
 
 	}
 
 
-	private Map<String, HostGroup> lookupClusterGroups() throws CandlestackPropertiesException {
-		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
-		Map<String, HostGroup> clusterGroups = new HashMap<>();
-		for ( DBCluster cluster : dbClusterResults.getDBClusters() ) {
+	private List<HostGroup> lookupClusterGroups() throws CandlestackPropertiesException {
 
-			// Create the hostgroup for the cluster
-			HostGroup clusterHostGroup = new HostGroup( cluster.getDBClusterIdentifier(), cluster.getDatabaseName() );
+		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
+		List<HostGroup> clusterGroups = new ArrayList<>();
+		for ( DBCluster dbCluster : dbClusterResults.getDBClusters() ) {
+
+			// Validate the cluster is eligible for monitoring
+			RDSType rdsType = RDSType.getTypeFromEngine( dbCluster.getEngine() );
+			if ( !RDSUtil.isDBClusterEligible( dbCluster, dbClusterPrefix, dbClusterRegex, rdsType ) ) {
+				continue;
+			}
+
+			// Create the host group for the cluster
+			HostGroup clusterHostGroup = new HostGroup( dbCluster.getDBClusterIdentifier(), dbCluster.getDatabaseName() );
 
 			// Now create a cluster host that will perform cluster level checks
-			RDSType rdsType = RDSType.getTypeFromEngine( cluster.getEngine() );
-			Host clusterHost = new Host( cluster.getDBClusterIdentifier(), "", "", contactGroups );
+			Host clusterHost = new Host( dbCluster.getDBClusterIdentifier(), "", "", contactGroups );
 			for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
 				if ( metric.isRDSTypeSupported( rdsType ) && metric.isClusterOnlyMetric() ) {
-					clusterHost.addService( metric.getService( cluster.getDBClusterIdentifier(), contactGroups ) );
+					clusterHost.addService( metric.getService( dbCluster.getDBClusterIdentifier(), contactGroups ) );
 				}
 			}
 
@@ -166,22 +155,43 @@ public class RDSHostMonitorLookup implements HostMonitorLookup {
 				clusterHostGroup.addHost( clusterHost );
 			}
 
-			for ( DBClusterMember member : cluster.getDBClusterMembers() ) {
-				clusterGroups.put( member.getDBInstanceIdentifier(), clusterHostGroup );
+			// Now add the cluster members to the host group
+			for ( DBClusterMember clusterMember : dbCluster.getDBClusterMembers() ) {
+				clusterHostGroup.addHost( createHostForDBClusterMember( clusterMember, rdsType ) );
 			}
 
+			// Add the list of cluster groups
+			clusterGroups.add( clusterHostGroup );
+
 		}
+
 		return clusterGroups;
+
 	}
 
 
-	private Host createHostForDBInstance( DBInstance dbInstance, RDSType rdsType, boolean isReplica ) throws CandlestackPropertiesException {
+	private Host createHostForDBInstance( DBInstance dbInstance, RDSType rdsType ) throws CandlestackPropertiesException {
 
 		Host host = new Host( dbInstance.getDBInstanceIdentifier(), "", dbInstance.getEndpoint().getAddress(), contactGroups );
 
 		for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
-			if ( metric.isRDSTypeSupported( rdsType ) && !metric.isClusterOnlyMetric() && ( !metric.isReplicaOnlyMetric() || isReplica ) ) {
+			if ( metric.isRDSTypeSupported( rdsType ) && !metric.isClusterOnlyMetric() && !metric.isReplicaOnlyMetric() ) {
 				host.addService( metric.getService( dbInstance.getDBInstanceIdentifier(), contactGroups ) );
+			}
+		}
+
+		return host;
+
+	}
+
+
+	private Host createHostForDBClusterMember( DBClusterMember dbClusterMember, RDSType rdsType ) throws CandlestackPropertiesException {
+
+		Host host = new Host( dbClusterMember.getDBInstanceIdentifier(), "", "", contactGroups );
+
+		for ( RDSCloudWatchMetric metric : cloudWatchMetrics ) {
+			if ( metric.isRDSTypeSupported( rdsType ) && !metric.isClusterOnlyMetric() && ( !metric.isReplicaOnlyMetric() || !dbClusterMember.isClusterWriter() ) ) {
+				host.addService( metric.getService( dbClusterMember.getDBInstanceIdentifier(), contactGroups ) );
 			}
 		}
 

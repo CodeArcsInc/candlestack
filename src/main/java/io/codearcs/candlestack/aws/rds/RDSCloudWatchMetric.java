@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.amazonaws.services.cloudwatch.model.Dimension;
-
 import io.codearcs.candlestack.CandlestackPropertiesException;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.CloudWatchStatistic;
@@ -22,7 +20,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			"check-aws-rds-cpu",
 			"check-aws-rds-cpu-via-es.sh",
 			"Checks to see if the RDS instance is experiencing heavy CPU load. In the event an alert is triggered check the RDS instance for potential query issues causing the heavy CPU load.",
-			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ),
+			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.AURORA_MYSQL, RDSType.MARIADB ) ),
 			false,
 			false ),
 
@@ -31,7 +29,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			"check-aws-rds-db-connections",
 			"check-aws-rds-db-connections-via-es.sh",
 			"Checks to see if the RDS instance is experiencing high number of database connections. In the event an alert is triggered check the users of the RDS instance for potential connection leaks.",
-			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.MARIADB ) ),
+			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.AURORA_MYSQL, RDSType.MARIADB ) ),
 			false,
 			false ),
 
@@ -49,7 +47,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			"check-aws-rds-storage-used",
 			"check-aws-rds-storage-used-via-es.sh",
 			"Checks to see if the RDS instance has used more storage space than has been specified. In the event an alert is triggered check the RDS instance for potential issues causing a spike in data usage.",
-			new HashSet<>( Arrays.asList( RDSType.AURORA ) ),
+			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.AURORA_MYSQL ) ),
 			false,
 			true ),
 
@@ -58,7 +56,7 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			"check-aws-rds-replica-lag",
 			"check-aws-rds-replica-lag-via-es.sh",
 			"Checks to see if the Aurora read replica is experiencing a high replication lag. In the event an alert is triggered check the Aurora cluster for potential issues causing the lag.",
-			new HashSet<>( Arrays.asList( RDSType.AURORA ) ),
+			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.AURORA_MYSQL ) ),
 			true,
 			false ),
 
@@ -67,14 +65,12 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 			"check-aws-rds-active-transactions",
 			"check-aws-rds-active-transactions-via-es.sh",
 			"Checks to see if the RDS instance is experiencing a large number of active transactions. In the event an alert is triggered check the RDS instance for potential query issues causing the transaction build up.",
-			new HashSet<>( Arrays.asList( RDSType.AURORA ) ),
+			new HashSet<>( Arrays.asList( RDSType.AURORA, RDSType.AURORA_MYSQL ) ),
 			false,
 			false );
 
 
-	private static final String NAMESPACE = "AWS/RDS",
-			INSTANCE_DIMENSION_KEY = "DBInstanceIdentifier",
-			CLUSTER_DIMENSION_KEY = "DbClusterIdentifier";
+	private static final String NAMESPACE = "AWS/RDS";
 
 	private String serviceName, commandName, scriptFileName, notes, logsHost, logsAuthToken;
 
@@ -163,12 +159,6 @@ public enum RDSCloudWatchMetric implements CloudWatchMetric {
 	@Override
 	public String getNamespace() {
 		return NAMESPACE;
-	}
-
-
-	@Override
-	public Dimension getDimension( String dimensionValue ) {
-		return new Dimension().withName( clusterOnly ? CLUSTER_DIMENSION_KEY : INSTANCE_DIMENSION_KEY ).withValue( dimensionValue );
 	}
 
 

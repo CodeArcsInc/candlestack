@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClientBuilder;
 import com.amazonaws.services.rds.model.DBCluster;
+import com.amazonaws.services.rds.model.DBClusterMember;
 import com.amazonaws.services.rds.model.DBInstance;
 import com.amazonaws.services.rds.model.DescribeDBClustersResult;
 import com.amazonaws.services.rds.model.DescribeDBInstancesResult;
@@ -27,7 +28,7 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 
 	private AmazonRDS rdsClient;
 
-	private String dbInstancePrefix, dbInstanceRegex;
+	private String dbClusterPrefix, dbClusterRegex, dbInstancePrefix, dbInstanceRegex;
 
 	private CloudWatchAccessor cloudWatchAccessor;
 
@@ -35,6 +36,8 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 	public RDSMetricsFetcher() throws CandlestackException {
 		super( RDSUtil.TYPE_NAME, GlobalAWSProperties.getRDSMetricsFetcherSleep() );
 
+		dbClusterPrefix = GlobalAWSProperties.getRDSDBClusterPrefix();
+		dbClusterRegex = GlobalAWSProperties.getRDSDBClusterRegex();
 		dbInstancePrefix = GlobalAWSProperties.getRDSDBInstancePrefix();
 		dbInstanceRegex = GlobalAWSProperties.getRDSDBInstanceRegex();
 
@@ -63,16 +66,40 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
 		for ( DBCluster dbCluster : dbClusterResults.getDBClusters() ) {
 
+			// Do some initial validation to ensure we should be fetching metrics for this cluster
 			String dbClusterId = dbCluster.getDBClusterIdentifier();
 			RDSType rdsType = RDSType.getTypeFromEngine( dbCluster.getEngine() );
-			if ( !RDSUtil.isDBInstanceEligible( dbClusterId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
+			if ( !RDSUtil.isDBClusterEligible( dbCluster, dbClusterPrefix, dbClusterRegex, rdsType ) ) {
 				continue;
 			}
 
+			// Lookup the various metrics for the cluster and its members
 			for ( RDSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
-				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && cloudWatchMetric.isClusterOnlyMetric() ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbClusterId, RDSUtil.TYPE_NAME );
+
+				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && cloudWatchMetric.isClusterOnlyMetric() ) { // Cluster level metric
+
+					RDSCloudWatchDimensions clusterDimension = new RDSCloudWatchDimensions();
+					clusterDimension.setClusterDimension( dbClusterId );
+					if ( cloudWatchMetric == RDSCloudWatchMetric.VolumeBytesUsed ) {
+						clusterDimension.setEngineDimension( rdsType.name().toLowerCase() );
+					}
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, clusterDimension, dbClusterId, RDSUtil.TYPE_NAME );
+
+
+				} else if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) ) { // Instance level metric
+
+					for ( DBClusterMember clusterMember : dbCluster.getDBClusterMembers() ) {
+
+						if ( !cloudWatchMetric.isReplicaOnlyMetric() || !clusterMember.isClusterWriter() ) {
+							RDSCloudWatchDimensions clusterMemberDimension = new RDSCloudWatchDimensions();
+							clusterMemberDimension.setInstanceDimension( clusterMember.getDBInstanceIdentifier() );
+							cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, clusterMemberDimension, clusterMember.getDBInstanceIdentifier(), RDSUtil.TYPE_NAME );
+						}
+
+					}
+
 				}
+
 			}
 
 		}
@@ -80,20 +107,22 @@ public class RDSMetricsFetcher extends MetricsFetcher {
 
 
 	private void fetchInstanceMetrics() throws CandlestackAWSException, CandlestackException {
-		Set<String> replicaInstances = RDSUtil.getReplicaInstances( rdsClient );
 
 		DescribeDBInstancesResult dbInstanceResults = rdsClient.describeDBInstances();
 		for ( DBInstance dbInstance : dbInstanceResults.getDBInstances() ) {
 
 			String dbInstanceId = dbInstance.getDBInstanceIdentifier();
 			RDSType rdsType = RDSType.getTypeFromEngine( dbInstance.getEngine() );
-			if ( !RDSUtil.isDBInstanceEligible( dbInstanceId, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
+			if ( !RDSUtil.isDBInstanceEligible( dbInstance, dbInstancePrefix, dbInstanceRegex, rdsType ) ) {
 				continue;
 			}
 
+			RDSCloudWatchDimensions dimensions = new RDSCloudWatchDimensions();
+			dimensions.setInstanceDimension( dbInstanceId );
+
 			for ( RDSCloudWatchMetric cloudWatchMetric : cloudWatchMetrics ) {
-				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && !cloudWatchMetric.isClusterOnlyMetric() && ( !cloudWatchMetric.isReplicaOnlyMetric() || replicaInstances.contains( dbInstanceId ) ) ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dbInstanceId, RDSUtil.TYPE_NAME );
+				if ( cloudWatchMetric.isRDSTypeSupported( rdsType ) && !cloudWatchMetric.isClusterOnlyMetric() && !cloudWatchMetric.isReplicaOnlyMetric() ) {
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dimensions, dbInstanceId, RDSUtil.TYPE_NAME );
 				}
 			}
 

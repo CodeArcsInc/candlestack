@@ -15,12 +15,11 @@ import io.codearcs.candlestack.CandlestackException;
 import io.codearcs.candlestack.MetricsFetcher;
 import io.codearcs.candlestack.MetricsReaderWriter;
 import io.codearcs.candlestack.aws.GlobalAWSProperties;
-import io.codearcs.candlestack.aws.rds.RDSMetricsFetcher;
 
 
 public class S3MetricsFetcher extends MetricsFetcher {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger( RDSMetricsFetcher.class );
+	private static final Logger LOGGER = LoggerFactory.getLogger( S3MetricsFetcher.class );
 
 	private Set<S3MetadataMetric> metadataMetrics;
 

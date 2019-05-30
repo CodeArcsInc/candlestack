@@ -1,12 +1,7 @@
 package io.codearcs.candlestack.aws.rds;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.DBCluster;
-import com.amazonaws.services.rds.model.DBClusterMember;
-import com.amazonaws.services.rds.model.DescribeDBClustersResult;
+import com.amazonaws.services.rds.model.DBInstance;
 
 
 public class RDSUtil {
@@ -14,30 +9,29 @@ public class RDSUtil {
 	public static final String TYPE_NAME = "aws_rds";
 
 
-	public static boolean isDBInstanceEligible( String dbInstance, String dbInstancePrefix, String dbInstanceRegex, RDSType rdsType ) {
-		boolean eligble = true;
-		if ( rdsType == RDSType.UNSUPPORTED ) {
-			eligble = false;
-		} else if ( !dbInstancePrefix.isEmpty() && !dbInstance.startsWith( dbInstancePrefix ) ) {
-			eligble = false;
-		} else if ( !dbInstanceRegex.isEmpty() && !dbInstance.matches( dbInstanceRegex ) ) {
-			eligble = false;
-		}
-		return eligble;
+	public static boolean isDBClusterEligible( DBCluster dbCluster, String dbClusterPrefix, String dbClusterRegex, RDSType rdsType ) {
+		return isEligible( dbCluster.getDBClusterIdentifier(), dbClusterPrefix, dbClusterRegex, rdsType );
 	}
 
 
-	public static Set<String> getReplicaInstances( AmazonRDS rdsClient ) {
-		DescribeDBClustersResult dbClusterResults = rdsClient.describeDBClusters();
-		Set<String> replicas = new HashSet<>();
-		for ( DBCluster cluster : dbClusterResults.getDBClusters() ) {
-			for ( DBClusterMember member : cluster.getDBClusterMembers() ) {
-				if ( !member.getIsClusterWriter() ) {
-					replicas.add( member.getDBInstanceIdentifier() );
-				}
-			}
+	public static boolean isDBInstanceEligible( DBInstance dbInstance, String dbInstancePrefix, String dbInstanceRegex, RDSType rdsType ) {
+		if ( dbInstance.getDBClusterIdentifier() != null && !dbInstance.getDBClusterIdentifier().trim().isEmpty() ) {
+			return false;
 		}
-		return replicas;
+		return isEligible( dbInstance.getDBInstanceIdentifier(), dbInstancePrefix, dbInstanceRegex, rdsType );
+	}
+
+
+	private static boolean isEligible( String id, String idPrefix, String idRegex, RDSType rdsType ) {
+		boolean eligble = true;
+		if ( rdsType == RDSType.UNSUPPORTED ) {
+			eligble = false;
+		} else if ( !idPrefix.isEmpty() && !id.startsWith( idPrefix ) ) {
+			eligble = false;
+		} else if ( !idRegex.isEmpty() && !id.matches( idRegex ) ) {
+			eligble = false;
+		}
+		return eligble;
 	}
 
 }

@@ -8,6 +8,7 @@ import io.codearcs.candlestack.GlobalCandlestackProperties;
 import io.codearcs.candlestack.aws.ec2.EC2CloudWatchMetric;
 import io.codearcs.candlestack.aws.ec2.EC2MetricbeatMetric;
 import io.codearcs.candlestack.aws.elasticbeanstalk.EBCloudWatchMetric;
+import io.codearcs.candlestack.aws.lambda.LambdaCloudWatchMetric;
 import io.codearcs.candlestack.aws.rds.RDSCloudWatchMetric;
 import io.codearcs.candlestack.aws.s3.S3MetadataMetric;
 import io.codearcs.candlestack.aws.sqs.SQSCloudWatchMetric;
@@ -391,7 +392,9 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 	 * ---------------------------------------
 	 */
 
-	private static final String RDS_DBINSTANCE_PREFIX = "aws.rds.dbinstance.prefix",
+	private static final String RDS_DBCLUSTER_PREFIX = "aws.rds.dbcluster.prefix",
+			RDS_DBCLUSTER_REGEX = "aws.rds.dbcluster.regex",
+			RDS_DBINSTANCE_PREFIX = "aws.rds.dbinstance.prefix",
 			RDS_DBINSTANCE_REGEX = "aws.rds.dbinstance.regex",
 			RDS_METRICS_FETCHER_SLEEP = "aws.rds.metrics.fetcher.sleep.min",
 			RDS_CLOUDWATCH_METRICS_MONITOR = "aws.rds.cloudwatch.metrics.monitor",
@@ -407,6 +410,16 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static boolean isRDSEnabled() throws CandlestackPropertiesException {
 		return getBooleanProperty( RDS_ENABLED, false );
+	}
+
+
+	public static String getRDSDBClusterPrefix() throws CandlestackPropertiesException {
+		return getStringProperty( RDS_DBCLUSTER_PREFIX, "" ).trim();
+	}
+
+
+	public static String getRDSDBClusterRegex() throws CandlestackPropertiesException {
+		return getStringProperty( RDS_DBCLUSTER_REGEX, "" ).trim();
 	}
 
 
@@ -542,6 +555,77 @@ public class GlobalAWSProperties extends GlobalCandlestackProperties {
 
 	public static long getS3MetadataMetricCriticalLevel( String locationId, S3MetadataMetric metric ) throws CandlestackPropertiesException {
 		return determineAlertValue( S3_METADATA_METRIC_CRITICAL_PREFIX, metric.name(), locationId );
+	}
+
+	/*
+	 * ---------------------------------------
+	 * Properties related to Lambda
+	 * ---------------------------------------
+	 */
+	private static final String LAMBDA_METRICS_FETCHER_SLEEP = "aws.lambda.metrics.fetcher.sleep.min",
+			LAMBDA_CLOUDWATCH_METRICS_FETCH = "aws.lambda.cloudwatch.metrics.fetch",
+			LAMBDA_CLOUDWATCH_METRICS_MONITOR = "aws.lambda.cloudwatch.metrics.monitor",
+			LAMBDA_FUNCTION_REGEX = "aws.lambda.function.regex",
+			LAMBDA_ENABLED = "aws.lambda.enabled";
+
+	private static final String LAMBDA_CLOUDWATCH_METRIC_WARNING_PREFIX = "aws.lambda.cloudwatch.metric.warning.",
+			LAMBDA_CLOUDWATCH_METRIC_CRITICAL_PREFIX = "aws.lambda.cloudwatch.metric.critical.",
+			LAMBDA_SERVICE_NOTIFICATION_PERIOD_PREFIX = "aws.lambda.service.notification.period.";
+
+
+	public static boolean isLambdaEnabled() throws CandlestackPropertiesException {
+		return getBooleanProperty( LAMBDA_ENABLED, false );
+	}
+
+
+	public static int getLambdaMetricsFetcherSleep() throws CandlestackPropertiesException {
+		return getIntProperty( LAMBDA_METRICS_FETCHER_SLEEP, DEFAULT_METRICS_FETCHER_SLEEP_MIN );
+	}
+
+
+	public static String getLambdaFunctionRegex() throws CandlestackPropertiesException {
+		return getStringProperty( LAMBDA_FUNCTION_REGEX, "" ).trim();
+	}
+
+
+	public static Set<LambdaCloudWatchMetric> getLambdaCloudwatchMetricsToFetch() throws CandlestackPropertiesException {
+		Set<LambdaCloudWatchMetric> cloudwatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( LAMBDA_CLOUDWATCH_METRICS_FETCH, true ) ) {
+				cloudwatchMetrics.add( LambdaCloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + LAMBDA_CLOUDWATCH_METRICS_FETCH + "]" );
+		}
+		return cloudwatchMetrics;
+	}
+
+
+	public static Set<LambdaCloudWatchMetric> getLambdaCloudwatchMetricsToMonitor() throws CandlestackPropertiesException {
+		Set<LambdaCloudWatchMetric> cloudwatchMetrics = new HashSet<>();
+		try {
+			for ( String metric : getSetProperty( LAMBDA_CLOUDWATCH_METRICS_MONITOR, true ) ) {
+				cloudwatchMetrics.add( LambdaCloudWatchMetric.valueOf( metric ) );
+			}
+		} catch ( IllegalArgumentException e ) {
+			throw new CandlestackPropertiesException( "GlobalAWSProperties was detected an invalid value for property key [" + LAMBDA_CLOUDWATCH_METRICS_MONITOR + "]" );
+		}
+		return cloudwatchMetrics;
+	}
+
+
+	public static long getLambdaCloudWatchMetricWarningLevel( String locationId, LambdaCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( LAMBDA_CLOUDWATCH_METRIC_WARNING_PREFIX, metric.name(), locationId );
+	}
+
+
+	public static long getLambdaCloudWatchMetricCriticalLevel( String locationId, LambdaCloudWatchMetric metric ) throws CandlestackPropertiesException {
+		return determineAlertValue( LAMBDA_CLOUDWATCH_METRIC_CRITICAL_PREFIX, metric.name(), locationId );
+	}
+
+
+	public static String getLambdaServiceNotificationPeriod( String locationId ) throws CandlestackPropertiesException {
+		return getStringProperty( LAMBDA_SERVICE_NOTIFICATION_PERIOD_PREFIX + locationId, DEFAULT_SERVICE_NOTIFICATION_TIME_PERIOD ).trim();
 	}
 
 

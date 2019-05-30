@@ -53,8 +53,12 @@ public class EC2MetricsFetcher extends MetricsFetcher {
 			for ( Instance instance : instances ) {
 
 				String instanceId = instance.getInstanceId();
+				
+				EC2CloudWatchDimensions dimensions = new EC2CloudWatchDimensions();
+				dimensions.setInstanceIdDimension( instanceId );
+				
 				for ( EC2CloudWatchMetric cloudWatchMetric : ec2CloudWatchMetrics ) {
-					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, instanceId, EC2Util.TYPE_NAME );
+					cloudWatchAccessor.lookupAndSaveMetricData( cloudWatchMetric, dimensions, instanceId, EC2Util.TYPE_NAME );
 				}
 
 			}
