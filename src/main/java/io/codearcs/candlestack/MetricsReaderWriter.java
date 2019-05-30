@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +42,8 @@ public class MetricsReaderWriter {
 			METRIC_NAME_KEY = "metric_name",
 			METRIC_VALUE_KEY = "metric_value";
 
-	private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat( "yyyy_MM_dd" ),
-			METRIC_DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSXXX" );
+	private static final FastDateFormat FILE_DATE_FORMAT = FastDateFormat.getInstance( "yyyy_MM_dd" ),
+			METRIC_DATE_FORMAT = FastDateFormat.getInstance( "yyyy-MM-dd'T'HH:mm:ss.SSSZZ" );
 
 
 	private static MetricsReaderWriter instance = null;
